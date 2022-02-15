@@ -3,18 +3,14 @@ cards = list(map(int, input().split()))
 M = int(input())
 count_cards = list(map(int, input().split()))
 
-hashMap = {}
+from collections import Counter
 
-for num in cards :
-    if num in hashMap :
-        hashMap[num] += 1
-    else :
-        hashMap[num] = 1
+C = Counter(cards)
 
 ans = []
 for num in count_cards :
-    if num in hashMap :
-        ans.append(str(hashMap[num]))
+    if num in C :
+        ans.append(str(C[num]))
     else :
         ans.append('0')
 
