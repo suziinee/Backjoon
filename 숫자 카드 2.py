@@ -1,9 +1,21 @@
 N = int(input())
-cards = sorted(list(map(int, input().split())))
+cards = list(map(int, input().split()))
 M = int(input())
 count_cards = list(map(int, input().split()))
 
-from bisect import bisect_left, bisect_right
+hashMap = {}
 
-for i in count_cards :
-    print(bisect_right(cards, i) - bisect_left(cards, i), end = ' ')
+for num in cards :
+    if num in hashMap :
+        hashMap[num] += 1
+    else :
+        hashMap[num] = 1
+
+ans = []
+for num in count_cards :
+    if num in hashMap :
+        ans.append(str(hashMap[num]))
+    else :
+        ans.append('0')
+
+return ' '.join(ans)
