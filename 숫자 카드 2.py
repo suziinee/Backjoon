@@ -7,11 +7,6 @@ from collections import Counter
 
 C = Counter(cards)
 
-ans = []
-for num in count_cards :
-    if num in C :
-        ans.append(str(C[num]))
-    else :
-        ans.append('0')
+ans = ' '.join(str(C[num]) if num in C else '0' for num in count_cards)
 
-return ' '.join(ans)
+print(ans)
