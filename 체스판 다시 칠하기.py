@@ -5,9 +5,7 @@ for i in range(N) :
     chess.append(list(input()))
 
 def pop_chess(x, y, lst) :
-    new = []
-    for i in range(x, x + 8) :
-        new.append(list(lst[i][y:y+8]))
+    new = [list(lst[i][y:y+8]) for i in range(x, x + 8)]
     return new 
 
 def compare_chess(new) :
@@ -39,8 +37,7 @@ def compare_chess(new) :
 ans = []
 for i in range(N - 7) :
     for j in range(M - 7) :
-        new = pop_chess(i, j, chess)
-        ans.append(compare_chess(new))
+        ans.append(compare_chess(pop_chess(i, j, chess)))
 
 print(min(ans))
         
