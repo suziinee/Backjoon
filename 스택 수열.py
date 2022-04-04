@@ -6,24 +6,22 @@ nums = []
 for i in range(n) :
     nums.append(int(input()))
 
-stack.append(1)
-print_list.append("+")
-now = 2
+now = 1
+flag = 0
 
 for i in nums :
-    if not stack :
-        stack.append(now)
-        print_list.append("+")
-        now += 1
-    while stack[-1] != i and stack[-1] < i :
+    while now <= i :
         stack.append(now)
         print_list.append("+")
         now += 1
     if stack[-1] == i :
         stack.pop()
         print_list.append("-")
-        
-if stack :
+    else :
+        flag = 1
+        break
+
+if flag == 1 :
   print("NO")
 else :
   for p in print_list :
