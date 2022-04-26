@@ -1,16 +1,12 @@
-from itertools import combinations as comb
+# dp[i] = dp[i-1] + dp[i-2]
+
 N = int(input())
 
-if N % 2 == 0 :
-    zero = N
-else :
-    zero = N - 1
+dp = [0] * (N + 1)
+dp[1] = 1
+dp[2] = 2
 
-ans = 0
-for i in range(0, zero + 1, 2) :
-    if i == 0 :
-        ans += 1
-    else :
-        ans += len(list(comb(range((N - i) + (i//2)), i//2)))
+for i in range(3, N + 1) :
+    dp[i] = dp[i-1] + dp[i-2]
 
-print(ans % 15746)
+print(dp[N] % 15746)
