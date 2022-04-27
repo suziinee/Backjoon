@@ -1,35 +1,30 @@
-from itertools import permutations as perm
-from collections import deque
-
 N = int(input())
-nums = input().split() #eval을 위해 str으로 받기
-operators = list(map(int, input().split()))
-d = {0 : "+", 1 : "-", 2 : "*", 3 : "/"}
-new_op = []
+nums = list(map(int, input().split()))
+op = list(map(int, input().split()))
 
-for i in range(4) :
-    new_op.extend([d[i]] * operators[i])
+max_ans = -1e9
+min_ans = 1e9
 
-perms = list(set(perm(new_op, len(new_op))))
+def dfs(res, idx, add, min_, mul, div) :
 
-ans = []
-n = len(new_op)
-for op in perms :
-    eval_ = deque(nums.copy())
-    res = eval_.popleft()
-    for i in range(n) :
-        if op[i] == "/" :
-            if int(res) < 0 :
-                res = -(abs(int(res)) // int(eval_.popleft()))
-            else :
-                res = int(res) // int(eval_.popleft())
-        else :
-            res += op[i]
-            res += eval_.popleft()
-            res = eval(res)
-        res = str(res)
-    ans.append(int(res))
+    global max_ans, min_ans
 
-print(max(ans))
-print(min(ans))
+    # 재귀 끝내기
+    if idx == N :
+        max_ans = max(max_ans, res)
+        min_ans = min(min_ans, res)
+        return
+    
+    if add > 0 :
+        dfs(res + nums[idx], idx + 1, add - 1, min_, mul, div)
+    if min_ > 0 :
+        dfs(res - nums[idx], idx + 1, add, min_ - 1, mul, div)
+    if mul > 0 :
+        dfs(res * nums[idx], idx + 1, add, min_, mul - 1, div)
+    if div > 0 :
+        dfs(int(res / nums[idx]), idx + 1, add, min_, mul, div - 1)
 
+
+dfs(nums[0], 1, op[0], op[1], op[2], op[3])
+print(max_ans)
+print(min_ans)
