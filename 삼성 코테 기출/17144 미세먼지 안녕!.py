@@ -1,18 +1,12 @@
 r, c, t = map(int, input().split())
 arr = [list(map(int, input().split())) for _ in range(r)]
-cur = 0
 
 #미세먼지 좌표 찾기
-flag = 0
 for i in range(r) :
-    for j in range(c) :
-        if arr[i][j] == -1 and flag == 0 :
-            up_x = i
-            flag = 1
-        if arr[i][j] == -1 and flag == 1 :
-            down_x = i
-            break
-
+    if arr[i][0] == -1 :
+        up_x = i
+        down_x = i+1
+        break
 arr[up_x][0] = -1
 arr[down_x][0] = -1
 
@@ -41,9 +35,7 @@ def circulation() :
 
 
 def dirt() :
-    global up_x
-    global down_x
-    tmp = [[0] * (c) for _ in range(r)]
+    tmp = [[0] * (c) for _ in range(r)] #확산값 저장
     dx = [-1, 0, 1, 0]
     dy = [0, 1, 0, -1]
 
@@ -59,12 +51,11 @@ def dirt() :
                     if arr[nx][ny] == -1 : continue
                     tmp[nx][ny] += val
                     discount += val
-                tmp[i][j] += (arr[i][j] - discount)
+                arr[i][j] -= discount
 
     for i in range(r) :
         for j in range(c) :
-            if arr[i][j] != -1 :
-                arr[i][j] = tmp[i][j]
+            arr[i][j] += tmp[i][j]
 
 
 for time in range(t) :
