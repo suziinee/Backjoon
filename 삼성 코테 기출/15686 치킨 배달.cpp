@@ -1,110 +1,72 @@
 #include <iostream>
 #include <vector>
-#include <cmath>
+#include <algorithm>
+using namespace std;
 
 int n, m;
-int map[100][13]; //각 집마다 치킨집과의 거리
-int res[13]; //치킨집 조합
-int ans = 0x7fffffff;
-
-class AXIS 
-{
-public:
+struct AXIS {
 	int x; int y;
 };
-std::vector<AXIS> house;
-std::vector<AXIS> chicken;
-
+vector<AXIS> house;
+vector<AXIS> chick;
+int ans = 0x7fffffff;
 
 void input()
 {
-	std::cin >> n;
-	std::cin >> m;
-	int tmp; AXIS a;
-	for (int i = 1; i <= n; i++) {
-		for (int j = 1; j <= n; j++) {
-			std::cin >> tmp;
-			if (tmp == 1) {
-				a.x = j; a.y = i;
-				house.push_back(a);
+	cin >> n;
+	cin >> m;
+
+	int tmp;
+	AXIS t;
+	for (int x = 0; x < n; x++) {
+		for (int y = 0; y < n; y++) {
+			cin >> tmp;
+			t.x = x; t.y = y;
+			if (tmp == 1) house.push_back(t);
+			if (tmp == 2) chick.push_back(t);
+		}
+	}
+}
+
+void output()
+{
+	cout << ans;
+}
+
+vector<AXIS> pick;
+void dfs(int start)
+{
+	if (pick.size() == m) {
+		int sum = 0;
+		for (int i = 0; i < house.size(); i++) {
+			int tmp = 0x7fffffff;
+			for (int j = 0; j < m; j++) {
+				tmp = min(abs(pick[j].x - house[i].x) + abs(pick[j].y - house[i].y), tmp);
 			}
-			else if (tmp == 2) {
-				a.x = j; a.y = i;
-				chicken.push_back(a);
-			}
+			sum += tmp;
 		}
-	}
-}
 
-void distance(const int& h, const int& c)
-{
-	for (int i = 0; i < h; i++) {
-		int x = house[i].x; int y = house[i].y;
-		for (int j = 0; j < c; j++) {
-			map[i][j] = abs(x - chicken[j].x) + abs(y - chicken[j].y);
-		}
-	}
-}
-
-int min_chicken(const int& h, const int& c)
-{
-	int sum = 0;
-	for (int i = 0; i < h; i++) {
-		int min = 0x7fffffff;
-		for (int j = 0; j < c; j++) {
-			if (min > map[i][j]) min = map[i][j];
-		}
-		sum += min;
-	}
-	return sum;
-}
-
-int dfs_chicken(const int& h)
-{
-	int sum = 0;
-	for (int i = 0; i < h; i++) {
-		int min = 0x7fffffff;
-		for (int j = 0; j < m; j++) {
-			if (min > map[i][res[j]]) min = map[i][res[j]];
-		}
-		sum += min;
-	}
-	return sum;
-}
-
-void dfs(int L, int beginWith, const int& c, const int& h)
-{
-	if (L == m) {
-		int ret = dfs_chicken(h);
-		if (ans > ret) ans = ret;
+		if (sum < ans) ans = sum;
 		return;
 	}
-	else {
-		for (int i = beginWith; i < c; i++) {
-			res[L] = i;
-			dfs(L + 1, i + 1, c, h);
-		}
+
+	for (int i = start; i < chick.size(); i++) {
+		pick.push_back(chick[i]);
+		dfs(i + 1);
+		pick.pop_back();
 	}
 }
 
 void solve()
 {
-	int h = house.size();
-	int c = chicken.size();
-	distance(h, c);
-
-	if (c <= m) {
-		ans = min_chicken(h, c);
-	}
-	else {
-		dfs(0, 0, c, h);
-	}
+	dfs(0);
 }
+
 
 int main()
 {
 	input();
 	solve();
-	std::cout << ans << std::endl;
+	output();
 	return 0;
 }
