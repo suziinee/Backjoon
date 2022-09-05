@@ -4,9 +4,8 @@ using namespace std;
 
 #define MAX 1000
 int n, m;
-struct POS { int x; int y; int ans; };
+struct POS { int x; int y; int flag; int ans; };
 char map[MAX + 5][MAX + 5];
-int ans = 0x7fffffff;
 
 
 void input()
@@ -17,63 +16,69 @@ void input()
 	}
 }
 
-int bfs(const int& x, const int& y, int flag) //(x, y)에서부터 bfs
+int bfs() 
 {
 	queue<POS> q;
-	bool chk[MAX + 5][MAX + 5] = { false };
-	q.push({ x, y, 1 });
-	chk[x][y] = true;
+	bool chk[MAX + 5][MAX + 5][2] = { false };
+
+	q.push({ 1, 1, 1, 1 }); //flag 초기값은 1
+	chk[1][1][1] = true;
 
 	const int dx[] = { 0, 1, 0, -1 };
 	const int dy[] = { -1, 0, 1, 0 };
 
 	while (!q.empty()) {
 		POS tmp = q.front(); q.pop();
-		POS next;
-		next.ans = tmp.ans + 1;
+		if (tmp.x == m && tmp.y == n) return tmp.ans; //종료조건
 
 		for (int dir = 0; dir < 4; dir++) {
+			POS next;
+			next.ans = tmp.ans + 1; next.flag = tmp.flag;
 			next.x = tmp.x + dx[dir];
 			next.y = tmp.y + dy[dir];
 			
 			if (next.x<1 || next.y<1 || next.x>m || next.y>n) continue;
+			if (chk[next.y][next.x][next.flag] == true) continue;
 
-			if (map[next.y][next.x] == '1' && flag == 1) {
-				int b = bfs(next.y, next.x, 0); //길을 못찾았을 경우 0x7fffffff
-				if (b != 0x7fffffff) {
-					if (next.ans + b - 1 < ans) ans = next.ans + b - 1;
-				}
-				continue;
+			//방문하지 않은 곳이라면
+			//1. 벽이 아닐 경우
+			if (map[next.y][next.x] == '0') { //큐에 넣어주고 방문처리
+				q.push(next);
+				chk[next.y][next.x][next.flag] = true;
 			}
-
-			if (chk[next.y][next.x] == true) continue;
-			if (map[next.y][next.x] == '1' && flag == 0) continue;
-			
-			if (next.x == m && next.y == n) return next.ans;
-			q.push(next);
-			chk[next.y][next.x] = true;
+			//2. 벽일 경우
+			else if (map[next.y][next.x] == '1') {
+				if (next.flag == 1) { //부술 기회가 있음 -> 부수고 큐에 넣고 방문처리
+					next.flag = 0;
+					q.push(next);
+					chk[next.y][next.x][next.flag] = true;
+				}
+				else { //더 이상 부술 수 없음
+					continue;
+				}
+			}
 		}
 	}
 
-	return 0x7fffffff;
+	return -1;
 }
 
-void solve()
+int solve()
 {
-	bfs(1, 1, 1);
+	int ans = bfs();
+	return ans;
 }
 
-void output()
+void output(const int& ans)
 {
-	if (ans == 0x7fffffff) cout << -1;
-	else cout << ans;
+	cout << ans;
 }
 
 
 int main()
 {
 	input();
-	solve();
-	output();
+	int ans = solve();
+	output(ans);
 	return 0;
 }
