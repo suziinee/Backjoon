@@ -18,11 +18,9 @@ void input()
 	}
 }
 
-void dfs(int n) //depth, sum
+void dfs(int n, int sum) //depth, sum
 {
 	if (n > N) {
-		int sum = 0;
-		for (int i = 2; i <= N; i++) { sum += abs(pick[i] - pick[i - 1]); }
 		if (sum > ans) ans = sum;
 		return;
 	}
@@ -31,7 +29,8 @@ void dfs(int n) //depth, sum
 		if (chk[i] == 0) {
 			pick[n] = nums[i];
 			chk[i] = 1;
-			dfs(n + 1);
+			if (n >= 2) dfs(n + 1, sum + abs(pick[n] - pick[n - 1]));
+			else dfs(n + 1, sum);
 			chk[i] = 0;
 		}
 	}
@@ -39,7 +38,7 @@ void dfs(int n) //depth, sum
 
 void solve()
 {
-	dfs(1);
+	dfs(1, 0);
 	cout << ans << "\n";
 }
 
