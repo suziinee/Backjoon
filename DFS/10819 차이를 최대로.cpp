@@ -21,17 +21,15 @@ void input()
 void dfs(int n) //depth, sum
 {
 	if (n > N) {
-		int sum = 0; 
-		int new_arr[MAXN + 3] = { 0 };
-		for (int i = 1; i <= N; i++) { new_arr[pick[i]] = nums[i]; }
-		for (int i = 2; i <= N; i++) { sum += abs(new_arr[i] - new_arr[i - 1]); }
+		int sum = 0;
+		for (int i = 2; i <= N; i++) { sum += abs(pick[i] - pick[i - 1]); }
 		if (sum > ans) ans = sum;
 		return;
 	}
 
-	for (int i = 1; i <= N; i++) { 
+	for (int i = 1; i <= N; i++) {
 		if (chk[i] == 0) {
-			pick[n] = i;
+			pick[n] = nums[i];
 			chk[i] = 1;
 			dfs(n + 1);
 			chk[i] = 0;
