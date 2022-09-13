@@ -4,13 +4,16 @@
 using namespace std;
 
 #define MAXN 50
-int map[MAXN + 5][MAXN + 5];
-int chk[MAXN + 5][MAXN + 5];
 int N, L, R;
+int map[2][MAXN + 5][MAXN + 5];
+int chk_bfs[MAXN + 5][MAXN + 5];
+int chk_find[MAXN + 5][MAXN + 5];
+int cur = 0;
 
 struct AXIS { int y; int x; };
 vector<AXIS> alli;
 queue<AXIS> q;
+
 const int dx[] = { 0, 1, 0, -1 };
 const int dy[] = { -1, 0, 1, 0 };
 
@@ -20,99 +23,93 @@ void input()
 	cin >> N >> L >> R;
 	for (int y = 0; y < N; y++) {
 		for (int x = 0; x < N; x++) {
-			cin >> map[y][x];
+			cin >> map[0][y][x];
 		}
 	}
 }
 
-void map_output()
-{
-	cout << "\nmap\n";
-	for (int y = 0; y < N; y++) {
-		for (int x = 0; x < N; x++) {
-			cout << map[y][x] << " ";
-		}
-		cout << "\n";
-	}
-}
-
-void search(const int& y, const int& x)
+void bfs(const int& y, const int& x)
 {
 	alli = {};
 	q = {};
-	fill(&chk[0][0], &chk[MAXN + 4][MAXN + 5], 0);
+	fill(&chk_bfs[0][0], &chk_bfs[MAXN + 4][MAXN + 5], 0);
 	int sum = 0;
 
 	q.push({ y, x });
 
 	while (!q.empty()) {
 		AXIS data = q.front(); q.pop();
-		int tmp = map[data.y][data.x];
-		int flag = 0;
+		int tmp = map[cur][data.y][data.x];
 
 		for (int d = 0; d < 4; d++) {
 			int nx = data.x + dx[d];
 			int ny = data.y + dy[d];
 
 			if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
-			if (chk[ny][nx]) continue;
+			if (chk_bfs[ny][nx]) continue;
 
-			if (abs(tmp - map[ny][nx]) >= L && abs(tmp - map[ny][nx]) <= R) {
-				flag = 1;
-				alli.push_back({ ny, nx });
-				chk[ny][nx] = 1;
-				sum += map[ny][nx];
-			}
-		}
-
-		//유효한 상하좌우가 하나라도 있으면 q에 상하좌우 모두 넣기
-		if (flag) {
-			for (int d = 0; d < 4; d++) {
-				int nx = data.x + dx[d];
-				int ny = data.y + dy[d];
-
-				if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
+			if (abs(tmp - map[cur][ny][nx]) >= L && abs(tmp - map[cur][ny][nx]) <= R) {
 				q.push({ ny, nx });
+				alli.push_back({ ny, nx });
+				sum += map[cur][ny][nx];
+				chk_bfs[ny][nx] = 1;
+				chk_find[ny][nx] = 1;
 			}
 		}
 	}
 
 	int divide = sum / alli.size();
+	int next = (cur + 1) % 2;
 	for (AXIS a : alli) {
-		map[a.y][a.x] = divide;
+		map[next][a.y][a.x] = divide;
 	}
 }
 
-AXIS find()
+int find()
 {
+	int flag = 0;
+	fill(&chk_find[0][0], &chk_find[MAXN + 4][MAXN + 5], 0);
+
 	for (int y = 0; y < N; y++) {
 		for (int x = 0; x < N; x++) {
-			int tmp = map[y][x];
+			int tmp = map[cur][y][x];
+			if (chk_find[y][x]) continue;
+
 			for (int d = 0; d < 4; d++) {
 				int nx = x + dx[d];
 				int ny = y + dy[d];
 				if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
-				if (abs(tmp - map[ny][nx]) >= L && abs(tmp - map[ny][nx]) <= R) {
-					return { y, x };
+				if (abs(tmp - map[cur][ny][nx]) >= L && abs(tmp - map[cur][ny][nx]) <= R && chk_find[ny][nx] == 0) {
+					bfs(y, x);
+					flag = 1;
 				}
 			}
 		}
 	}
 
-	return { -1, -1 };
+	int next = (cur + 1) % 2;
+	if (flag) {
+		for (int y = 0; y < N; y++) {
+			for (int x = 0; x < N; x++) {
+				if (chk_find[y][x] == 0) map[next][y][x] = map[cur][y][x];
+				map[cur][y][x] = 0;
+			}
+		}
+		cur = next;
+	}
+	
+	return flag;
 }
 
 
 int solve()
 {
 	int ans = 0;
-
-	while (true) { //연합이 될 만한 것을 찾으면 중단하고 search에 보내기
-		AXIS f = find();
-		if (f.y == -1) return ans;
-		search(f.y, f.x);
+	
+	while (true) {
+		int flag = find();
+		if (flag == 0) return ans;
 		ans++;
-		map_output();
 	}
 }
 
