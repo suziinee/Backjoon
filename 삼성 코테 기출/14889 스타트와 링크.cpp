@@ -1,73 +1,67 @@
 #include <iostream>
-#include <cstdlib>
+using namespace std;
 
-int n;
-int arr[20][20];
-int res[10];
-int min = 0x7fffffff;
+#define MAXN 20
+int N;
+int map[MAXN][MAXN];
+int team1[MAXN / 2]; int team2[MAXN / 2];
+int pick[MAXN]; //1과 0으로 구분
+int ans = 0x7fffffff;
 
-void input()
+
+void input() 
 {
-	std::cin >> n;
-	for (int i = 0; i < n; i++) {
-		for (int j = 0; j < n; j++) {
-			std::cin >> arr[i][j];
+	cin >> N;
+	for (int y = 0; y < N; y++) {
+		for (int x = 0; x < N; x++) {
+			cin >> map[y][x];
 		}
 	}
 }
 
-int in_res(const int& j)
+void check()
 {
-	for (int i = 0; i < n/2; i++) {
-		if (res[i] == j) return 1;
+	int t1 = 0; int t2 = 0;
+	for (int i = 0; i < N; i++) {
+		if (pick[i]) team1[t1++] = i;
+		else team2[t2++] = i;
 	}
-	return 0;
-}
 
-int start() //res에 있는 것들의 합
-{
-	int sum = 0; 
-	for (int i = 0; i < n / 2; i++) { //res[i]
-		for (int j = 0; j < n; j++) {
-			if (res[i] != j && in_res(j)) sum += arr[res[i]][j];
+	int sum1 = 0; int sum2 = 0;
+	for (int i = 0; i < N / 2; i++) {
+		for (int j = i + 1; j < N / 2; j++) {
+			sum1 += map[team1[i]][team1[j]] + map[team1[j]][team1[i]];
+			sum2 += map[team2[i]][team2[j]] + map[team2[j]][team2[i]];
 		}
 	}
-	return sum;
+
+	if (abs(sum1 - sum2) < ans) ans = abs(sum1 - sum2);
 }
 
-int link()
+void dfs(int n, int s) 
 {
-	int sum = 0;
-	for (int i = 0; i < n; i++) { 
-		for (int j = 0; j < n; j++) {
-			if (i != j && !in_res(i) && !in_res(j)) sum += arr[i][j];
-		}
-	}
-	return sum;
-}
-
-void dfs(const int& L, const int& BeginWith)
-{
-	if (L == n/2) {
-		int s = start();
-		int l = link();
-		int tmp = s > l ? s - l : l - s;
-		if (tmp < min) min = tmp;
+	if (n == N / 2) { //pick의 1은 N/2만큼 체크되어 있어야함 (N/2개를 뽑았을 때)
+		check();
 		return;
 	}
-	else {
-		for (int i = BeginWith; i < n; i++) {
-			res[L] = i;
-			dfs(L + 1, i + 1);
-		}
+
+	for (int i = s; i < N; i++) { //i번째를 뽑아서 start에 넣는 것
+		pick[i] = 1;
+		dfs(n + 1, i + 1);
+		pick[i] = 0;
 	}
 }
 
+void solve() 
+{
+	dfs(0, 0);
+	cout << ans;
+}
 
-int main()
+
+int main(void)
 {
 	input();
-	dfs(0, 0);
-	std::cout << min << std::endl;
+	solve();
 	return 0;
 }
