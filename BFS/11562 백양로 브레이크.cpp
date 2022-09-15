@@ -11,8 +11,9 @@ int K;
 struct QUS { int st; int en; };
 vector<QUS> qus;
 
-queue<int> q;
-int chk[MAXN + 1];
+struct STATUS { int n; int cnt; };
+queue<STATUS> q;
+int chk[MAXN + 1][MAXN + 1];
 
 
 void input()
@@ -38,43 +39,41 @@ void input()
 	}
 }
 
-int bfs(int st, int en)
+void bfs(int st) //st에서 갈 수 있는 모든 곳 구하기
 {
-	//초기화
 	q = {};
-	fill(chk, chk + MAXN + 1, 0x7fffffff); //양방향으로 바꾼 최소 개수
 
-	q.push(st);
-	chk[st] = 0;
-	if (st == en) return chk[st];
+	q.push({ st, 0 });
+	chk[st][st] = 0;
 
 	while (!q.empty()) {
-		int n = q.front(); q.pop();
+		STATUS data = q.front(); q.pop();
 
 		for (int nn = 1; nn <= N; nn++) {
 
-			if (!map[n][nn] && !map[nn][n]) continue;
+			if (!map[data.n][nn] && !map[nn][data.n]) continue;
 
-			if (map[n][nn] && chk[nn] > chk[n]) { //길이 있다면 그냥 가면 됨
-				chk[nn] = chk[n];
-				q.push(nn);
+			if (map[data.n][nn] && chk[st][nn] > data.cnt) { //길이 있다면 그냥 가면 됨
+				chk[st][nn] = data.cnt;
+				q.push({ nn, data.cnt });
 			}
-			else if (map[nn][n] && chk[nn] > chk[n] + 1) { //길이 한방향으로만 있음
-				chk[nn] = chk[n] + 1;
-				q.push(nn);
+			else if (map[nn][data.n] && chk[st][nn] > data.cnt + 1) { //길이 한방향으로만 있음
+				chk[st][nn] = data.cnt + 1;
+				q.push({ nn, data.cnt + 1 });
 			}
 		}
 	}
-	
-	return chk[en];
 }
-
 
 void solve()
 {
+	fill(&chk[0][0], &chk[MAXN][MAXN + 1], 0x7fffffff); //양방향으로 바꾼 최소 개수
+
 	for (QUS q : qus) {
-		int ret = bfs(q.st, q.en);
-		cout << ret << "\n";
+		bfs(q.st);
+	}
+	for (QUS q : qus) {
+		cout << chk[q.st][q.en] << "\n";
 	}
 }
 
