@@ -1,21 +1,14 @@
 #include <iostream>
-#include <algorithm>
 #include <queue>
 using namespace std;
 
 #define MAXN 50
 int N, L, R;
-int map[2][MAXN + 5][MAXN + 5];
-int chk_bfs[MAXN + 5][MAXN + 5];
-int chk_find[MAXN + 5][MAXN + 5];
-int cur = 0;
+int map[MAXN][MAXN];
+int chk[MAXN][MAXN];
 
 struct AXIS { int y; int x; };
-vector<AXIS> alli;
 queue<AXIS> q;
-
-const int dx[] = { 0, 1, 0, -1 };
-const int dy[] = { -1, 0, 1, 0 };
 
 
 void input()
@@ -23,101 +16,87 @@ void input()
 	cin >> N >> L >> R;
 	for (int y = 0; y < N; y++) {
 		for (int x = 0; x < N; x++) {
-			cin >> map[0][y][x];
+			cin >> map[y][x];
 		}
 	}
 }
 
-void bfs(const int& y, const int& x)
+void bfs(int y, int x, int area_index, int& count, int& sum) 
 {
-	alli = {};
+	static int dx[] = { 0, 1, 0, -1 };
+	static int dy[] = { -1, 0, 1, 0 };
+
 	q = {};
-	fill(&chk_bfs[0][0], &chk_bfs[MAXN + 4][MAXN + 5], 0);
-	int sum = 0;
 
 	q.push({ y, x });
+	chk[y][x] = area_index;
+	count++;
+	sum += map[y][x];
 
 	while (!q.empty()) {
-		AXIS data = q.front(); q.pop();
-		int tmp = map[cur][data.y][data.x];
+		AXIS cur = q.front(); q.pop();
 
 		for (int d = 0; d < 4; d++) {
-			int nx = data.x + dx[d];
-			int ny = data.y + dy[d];
+			int nx = cur.x + dx[d];
+			int ny = cur.y + dy[d];
 
 			if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
-			if (chk_bfs[ny][nx]) continue;
+			if (chk[ny][nx]) continue;
+			int abs_ = abs(map[ny][nx] - map[cur.y][cur.x]);
+			if (abs_ < L || abs_ > R) continue;
 
-			if (abs(tmp - map[cur][ny][nx]) >= L && abs(tmp - map[cur][ny][nx]) <= R) {
-				q.push({ ny, nx });
-				alli.push_back({ ny, nx });
-				sum += map[cur][ny][nx];
-				chk_bfs[ny][nx] = 1;
-				chk_find[ny][nx] = 1;
-			}
+			q.push({ ny, nx });
+			chk[ny][nx] = area_index;
+			count++;
+			sum += map[ny][nx];
 		}
-	}
-
-	int divide = sum / alli.size();
-	int next = (cur + 1) % 2;
-	for (AXIS a : alli) {
-		map[next][a.y][a.x] = divide;
 	}
 }
 
-int find()
+void solve()
 {
-	int flag = 0;
-	fill(&chk_find[0][0], &chk_find[MAXN + 4][MAXN + 5], 0);
+	int ans = 0; 
+	bool is_update = true;
 
-	for (int y = 0; y < N; y++) {
-		for (int x = 0; x < N; x++) {
-			int tmp = map[cur][y][x];
-			if (chk_find[y][x]) continue;
+	while (is_update) {
+		is_update = false;
 
-			for (int d = 0; d < 4; d++) {
-				int nx = x + dx[d];
-				int ny = y + dy[d];
-				if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
-				if (abs(tmp - map[cur][ny][nx]) >= L && abs(tmp - map[cur][ny][nx]) <= R && chk_find[ny][nx] == 0) {
-					bfs(y, x);
-					flag = 1;
+		fill(&chk[0][0], &chk[MAXN - 1][MAXN], 0);
+
+		int area_index = 0;
+		int count[MAXN*MAXN + 1] = { 0 }; //area_index의 인덱스에 담길 연합구역의 나라 개수
+		int sum[MAXN*MAXN + 1] = { 0 }; //area_index의 인덱스에 담길 연합구역의 인구 합
+
+		for (int y = 0; y < N; y++) {
+			for (int x = 0; x < N; x++) {
+				if (chk[y][x] == 0) {
+					area_index++;
+					bfs(y, x, area_index, count[area_index], sum[area_index]);
 				}
 			}
 		}
-	}
 
-	int next = (cur + 1) % 2;
-	if (flag) {
 		for (int y = 0; y < N; y++) {
 			for (int x = 0; x < N; x++) {
-				if (chk_find[y][x] == 0) map[next][y][x] = map[cur][y][x];
-				map[cur][y][x] = 0;
+				int index = chk[y][x];
+				int avg = sum[index] / count[index];
+				if (map[y][x] != avg) { //인구이동이 있었음
+					map[y][x] = avg;
+					is_update = true;
+				}
 			}
 		}
-		cur = next;
-	}
-	
-	return flag;
-}
 
-
-int solve()
-{
-	int ans = 0;
-	
-	while (true) {
-		int flag = find();
-		if (flag == 0) return ans;
-		ans++;
+		if (is_update) ans++;
 	}
+
+	cout << ans;
 }
 
 
 int main(void)
 {
 	input();
-	int ans = solve();
-	cout << ans;
+	solve();
 	return 0;
 }
