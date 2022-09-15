@@ -8,13 +8,14 @@ int V, E, K;
 
 struct CONN { int n; int val; };
 list<CONN> conn[MAXV + 1];
+int conn_min[MAXV + 1][MAXV + 1];
 
 struct STATUS { int cur; int sum; };
 struct COMP {
 	bool operator()(STATUS& s1, STATUS& s2) { return s1.sum > s2.sum; }
 };
 priority_queue<STATUS, vector<STATUS>, COMP> pq;
-int chk[MAXV + 1]; 
+int chk[MAXV + 1];
 
 
 void input()
@@ -22,9 +23,13 @@ void input()
 	cin >> V >> E >> K;
 
 	int s, n, val;
+	fill(&conn_min[0][0], &conn_min[MAXV][MAXV + 1], 0x7fffffff);
+
 	for (int i = 0; i < E; i++) {
 		cin >> s >> n >> val;
+		if (conn_min[s][n] <= val) continue;
 		conn[s].push_back({ n, val });
+		conn_min[s][n] = val;
 	}
 }
 
