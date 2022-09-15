@@ -12,7 +12,10 @@ struct QUS { int st; int en; };
 vector<QUS> qus;
 
 struct STATUS { int n; int cnt; };
-queue<STATUS> q;
+struct COMP {
+	bool operator()(STATUS& s1, STATUS& s2) { return s1.cnt > s2.cnt; }
+};
+priority_queue<STATUS, vector<STATUS>, COMP> pq;
 int chk[MAXN + 1][MAXN + 1];
 
 
@@ -41,13 +44,13 @@ void input()
 
 void bfs(int st) //st에서 갈 수 있는 모든 곳 구하기
 {
-	q = {};
+	pq = {};
 
-	q.push({ st, 0 });
+	pq.push({ st, 0 });
 	chk[st][st] = 0;
 
-	while (!q.empty()) {
-		STATUS data = q.front(); q.pop();
+	while (!pq.empty()) {
+		STATUS data = pq.top(); pq.pop();
 
 		for (int nn = 1; nn <= N; nn++) {
 
@@ -55,11 +58,11 @@ void bfs(int st) //st에서 갈 수 있는 모든 곳 구하기
 
 			if (map[data.n][nn] && chk[st][nn] > data.cnt) { //길이 있다면 그냥 가면 됨
 				chk[st][nn] = data.cnt;
-				q.push({ nn, data.cnt });
+				pq.push({ nn, data.cnt });
 			}
 			else if (map[nn][data.n] && chk[st][nn] > data.cnt + 1) { //길이 한방향으로만 있음
 				chk[st][nn] = data.cnt + 1;
-				q.push({ nn, data.cnt + 1 });
+				pq.push({ nn, data.cnt + 1 });
 			}
 		}
 	}
