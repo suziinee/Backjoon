@@ -1,10 +1,10 @@
 #include <iostream>
 #include <vector>
-#include <unordered_set>
+#include <algorithm>
 using namespace std;
 
 int N, M;
-unordered_set<int> s;
+vector<int> nums;
 vector<int> candi;
 
 
@@ -14,7 +14,7 @@ void input()
 	for (int i = 0; i < N; i++) {
 		int n;
 		cin >> n;
-		s.insert(n);
+		nums.push_back(n);
 	}
 	cin >> M;
 	for (int i = 0; i < M; i++) {
@@ -24,13 +24,26 @@ void input()
 	}
 }
 
+int binary_search(int s, int e, const int& tar)
+{
+	int ret;
+	while (s <= e) {
+		int mid = (s + e) / 2;
+		if (tar == nums[mid]) return mid;
+		else if (tar > nums[mid]) s = mid + 1;
+		else e = mid - 1;
+	}
+	return -1;
+}
 
 void solve()
 {
+	sort(nums.begin(), nums.end());
 	for (int n : candi) {
-		auto i = s.find(n);
-		if (i == s.end()) cout << "0\n";
-		else cout << "1\n";
+		int index = binary_search(0, N - 1, n);
+
+		if (index != -1) cout << "1\n";
+		else cout << "0\n";
 	}
 }
 
