@@ -10,8 +10,11 @@ int N, M, K;
 string map[MAXN];
 
 int chk[MAXN][MAXN][MAXK + 1]; //(y, x)까지 k번 벽을 부수면서 간 최단 경로 기록
-struct AXIS { int y; int x; int k; };
-queue<AXIS> q;
+struct AXIS { int y; int x; int k; int sum_dist; };
+struct COMP {
+	bool operator()(AXIS& a1, AXIS& a2) { return a1.sum_dist > a2.sum_dist; }
+};
+priority_queue<AXIS, vector<AXIS>, COMP> pq;
 
 
 void input()
@@ -29,12 +32,11 @@ int bfs()
 	static int dy[] = { -1, 0, 1, 0 };
 	fill(chk[0][0], chk[MAXN][0], 0x7fffffff);
 
-	q.push({ 0, 0, 0 });
+	pq.push({ 0, 0, 0, 1 });
 	chk[0][0][0] = 1;
-	//if (N - 1 == 0 && M - 1 == 0) return 0;
 
-	while (!q.empty()) {
-		AXIS cur = q.front(); q.pop();
+	while (!pq.empty()) {
+		AXIS cur = pq.top(); pq.pop();
 
 		for (int d = 0; d < 4; d++) {
 			int nx = cur.x + dx[d];
@@ -45,7 +47,7 @@ int bfs()
 			if (map[ny][nx] == '0') { //0일때 그대로 이동
 				if (chk[ny][nx][cur.k] > chk[cur.y][cur.x][cur.k] + 1) {
 					chk[ny][nx][cur.k] = chk[cur.y][cur.x][cur.k] + 1;
-					q.push({ ny, nx, cur.k });
+					pq.push({ ny, nx, cur.k, chk[ny][nx][cur.k] });
 				}
 			}
 			else { //벽일때
@@ -55,7 +57,7 @@ int bfs()
 				else if (cur.k < K) { //벽을 부술 수 있음
 					if (chk[ny][nx][cur.k + 1] > chk[cur.y][cur.x][cur.k] + 1) {
 						chk[ny][nx][cur.k + 1] = chk[cur.y][cur.x][cur.k] + 1;
-						q.push({ ny, nx, cur.k + 1 });
+						pq.push({ ny, nx, cur.k + 1, chk[ny][nx][cur.k + 1] });
 					}
 				}
 			}
