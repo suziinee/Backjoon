@@ -27,13 +27,7 @@ int bfs()
 {
 	static int dx[] = { 0, 1, 0, -1 };
 	static int dy[] = { -1, 0, 1, 0 };
-	for (int y = 0; y < N; y++) {
-		for (int x = 0; x < M; x++) {
-			for (int k = 0; k <= K; k++) {
-				chk[y][x][k] = 0x7fffffff;
-			}
-		}
-	}
+	fill(chk[0][0], chk[MAXN][0], 0x7fffffff);
 
 	q.push({ 0, 0, 0 });
 	chk[0][0][0] = 1;
