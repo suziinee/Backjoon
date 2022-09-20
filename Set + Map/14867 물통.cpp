@@ -1,5 +1,5 @@
 #include <iostream>
-#include <set>
+#include <unordered_set>
 #include <queue>
 using namespace std;
 
@@ -8,14 +8,19 @@ STATUS st;
 STATUS en;
 queue<STATUS> q;
 
-struct CHK { int a; int b; };
-struct COMP {
-	bool operator()(const CHK& c1, const CHK& c2) const {
-		if (c1.a == c2.a) return c1.b < c2.b;
-		return c1.a < c2.a;
+struct CHK { 
+	int a; 
+	int b;
+	bool operator==(const CHK& c) const {
+		return (a == c.a) && (b == c.b);
 	}
 };
-set<CHK, COMP> s;
+struct HASH {
+	size_t operator()(const CHK& c) const {
+		return c.a ^ c.b;
+	}
+};
+unordered_set<CHK, HASH> s;
 
 
 void input()
