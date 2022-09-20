@@ -1,13 +1,21 @@
 #include <iostream>
-#include <unordered_set>
+#include <set>
 #include <queue>
 using namespace std;
 
 struct STATUS { int a; int b; int cnt; };
 STATUS st; 
 STATUS en;
-unordered_set<unsigned long long> s;
 queue<STATUS> q;
+
+struct CHK { int a; int b; };
+struct COMP {
+	bool operator()(const CHK& c1, const CHK& c2) const {
+		if (c1.a == c2.a) return c1.b < c2.b;
+		return c1.a < c2.a;
+	}
+};
+set<CHK, COMP> s;
 
 
 void input()
@@ -16,16 +24,12 @@ void input()
 	st.cnt = 0;
 }
 
-inline unsigned long long Get_Key(int a, int b)
-{
-	return ((unsigned long long)a * 1000000 + (unsigned long long)b);
-}
 
 int bfs()
 {
 	if (0 == en.a && 0 == en.b) return 0;
 	q.push({0, 0, 0});
-	s.insert(Get_Key(0, 0));
+	s.insert({ 0, 0 });
 
 	while (!q.empty()) {
 		STATUS cur = q.front(); q.pop();
@@ -48,13 +52,13 @@ int bfs()
 				else { next.a = st.a; next.b = cur.b - (st.a - cur.a); }
 			}
 			
-			auto iter = s.find(Get_Key(next.a, next.b));
+			auto iter = s.find({ next.a, next.b });
 			if (iter != s.end()) continue;
 
 			if (next.a == en.a && next.b == en.b) return next.cnt;
 
 			q.push(next);
-			s.insert(Get_Key(next.a, next.b));
+			s.insert({ next.a, next.b });
 		}
 	}
 
