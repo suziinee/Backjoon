@@ -18,7 +18,7 @@ void input()
 
 inline unsigned long long Get_Key(int a, int b)
 {
-	return ((unsigned long long)a << (32)) + (unsigned long long)b;
+	return ((unsigned long long)a * 1000000 + (unsigned long long)b);
 }
 
 int bfs()
