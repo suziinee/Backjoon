@@ -1,10 +1,10 @@
 #include <iostream>
-#include <cstdio>
+#include <unordered_map>
 using namespace std;
 
-#define MAXN 26
 int N;
-int tree[MAXN][2];
+struct NODE { int l; int r; };
+unordered_map<char, NODE> ht;
 
 
 void input()
@@ -14,45 +14,44 @@ void input()
 	char p, c1, c2;
 	for (int i = 0; i < N; i++) {
 		cin >> p >> c1 >> c2;
-		tree[p - 'A'][0] = (c1 == '.') ? -1 : (c1 - 'A');
-		tree[p - 'A'][1] = (c2 == '.') ? -1 : (c2 - 'A');
+		ht.insert({ p, {c1, c2} });
 	}
 }
 
-void pre(int n)
+void pre(char c)
 {
-	if (n == -1) return;
+	if (c == '.') return;
 
-	printf("%c", 'A' + n);
-	pre(tree[n][0]);
-	pre(tree[n][1]);
+	cout << c;
+	pre(ht[c].l);
+	pre(ht[c].r);
 }
 
-void in(int n)
+void in(char c)
 {
-	if (n == -1) return;
+	if (c == '.') return;
 
-	in(tree[n][0]);
-	printf("%c", 'A' + n);
-	in(tree[n][1]);
+	in(ht[c].l);
+	cout << c;
+	in(ht[c].r);
 }
 
-void post(int n)
+void post(char c)
 {
-	if (n == -1) return;
+	if (c == '.') return;
 	
-	post(tree[n][0]);
-	post(tree[n][1]);
-	printf("%c", 'A' + n);
+	post(ht[c].l);
+	post(ht[c].r);
+	cout << c;
 }
 
 void solve()
 {
-	pre(0);
+	pre('A');
 	cout << "\n";
-	in(0);
+	in('A');
 	cout << "\n";
-	post(0);
+	post('A');
 	cout << "\n";
 }
 
