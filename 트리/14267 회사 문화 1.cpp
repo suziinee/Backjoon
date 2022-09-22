@@ -1,10 +1,12 @@
 #include <iostream>
+#include <vector>
 using namespace std;
 
 #define MAXN 100000
 int N, M;
-int par[MAXN + 1];
 int comp[MAXN + 1];
+int ans[MAXN + 1];
+vector<int> tree[MAXN + 1];
 
 
 void input()
@@ -13,9 +15,9 @@ void input()
 	int n;
 	for (int i = 1; i <= N; i++) {
 		cin >> n;
-		par[i] = n;
+		if (n != -1) tree[n].push_back(i);
 	}
-	
+
 	int i, w;
 	for (int j = 0; j < M; j++) {
 		cin >> i >> w;
@@ -23,14 +25,20 @@ void input()
 	}
 }
 
+void dfs(int n, int sum)
+{
+	ans[n] = sum;
+
+	for (int next : tree[n]) {
+		dfs(next, sum + comp[next]);
+	}
+}
+
 void solve()
 {
-	for (int i = 2; i <= N; i++) {
-		comp[i] += comp[par[i]];
-	}
-
+	dfs(1, 0);
 	for (int i = 1; i <= N; i++) {
-		cout << comp[i] << " ";
+		cout << ans[i] << " ";
 	}
 }
 
