@@ -1,5 +1,5 @@
 #include <iostream>
-#include <vector>
+#include <set>
 using namespace std;
 
 #define MAXN 50
@@ -7,7 +7,8 @@ int N;
 int erase;
 int root;
 
-vector<int> tree[MAXN];
+int parent[MAXN];
+set<int> tree[MAXN];
 
 
 void input()
@@ -17,9 +18,13 @@ void input()
 	for (int i = 0; i < N; i++) {
 		cin >> n;
 		if (n == -1) root = i;
-		else tree[n].push_back(i);
+		else {
+			tree[n].insert(i);
+			parent[i] = n;
+		}
 	}
 	cin >> erase;
+	if (erase != root) tree[parent[erase]].erase(erase);
 }
 
 int dfs(int n)
@@ -33,8 +38,7 @@ int dfs(int n)
 		ret += dfs(child);
 	}
 
-	if (ret) return ret;
-	else return 1;
+	return ret;
 }
 
 void solve()
