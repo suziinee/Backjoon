@@ -5,7 +5,6 @@ using namespace std;
 #define MAXN 1000000
 int N;
 vector<int> tree[MAXN + 1];
-int parent[MAXN + 1]; //root 찾기 위해
 int chk[MAXN + 1];
 int dp[MAXN + 1][2];
 
@@ -18,14 +17,6 @@ void input()
 		cin >> u >> v;
 		tree[u].push_back(v);
 		tree[v].push_back(u);
-		parent[v] = u;
-	}
-}
-
-int find_root()
-{
-	for (int i = 1; i <= N; i++) {
-		if (parent[i] == 0) return i;
 	}
 }
 
@@ -50,10 +41,9 @@ void solve()
 		dp[i][1] = 1;
 	}
 
-	int root = find_root();
-	dfs(root);
+	dfs(1);
 
-	cout << min(dp[root][0], dp[root][1]);
+	cout << min(dp[1][0], dp[1][1]);
 }
 
 
