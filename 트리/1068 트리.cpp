@@ -24,12 +24,12 @@ void input()
 
 int dfs(int n)
 {
+	if (n == erase) return 0;
 	if (tree[n].empty()) return 1;
 
 	int ret = 0;
 
 	for (int child : tree[n]) {
-		if (child == erase) continue;
 		ret += dfs(child);
 	}
 
