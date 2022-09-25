@@ -59,9 +59,7 @@ bool move(const WOOD& w, char c)
 			}
 		}
 		else {
-			for (int y = w.y - 1; y < w.y - 1 + 3; y++) {
-				if (map[y][w.x] == '1') return false;
-			}
+			if (map[w.y - 1][w.x] == '1') return false;
 		}
 		return true;
 		break;
@@ -75,9 +73,7 @@ bool move(const WOOD& w, char c)
 		}
 		else {
 			if (w.y + 2 + 1 >= N) return false;
-			for (int y = w.y + 1; y < w.y + 1 + 3; y++) {
-				if (map[y][w.x] == '1') return false;
-			}
+			if (map[w.y + 2 + 1][w.x] == '1') return false;
 		}
 		return true;
 		break;
@@ -85,9 +81,7 @@ bool move(const WOOD& w, char c)
 	case 'L': {
 		if (w.x - 1 < 0) return false;
 		if (w.d == 0) {
-			for (int x = w.x - 1; x < w.x - 1 + 3; x++) {
-				if (map[w.y][x] == '1') return false;
-			}
+			if (map[w.y][w.x - 1] == '1') return false;
 		}
 		else {
 			for (int y = w.y; y < w.y + 3; y++) {
@@ -100,9 +94,7 @@ bool move(const WOOD& w, char c)
 	case 'R': {
 		if (w.d == 0) {
 			if (w.x + 2 + 1 >= N) return false;
-			for (int x = w.x + 1; x < w.x + 1 + 3; x++) {
-				if (map[w.y][x] == '1') return false;
-			}
+			if (map[w.y][w.x + 2 + 1] == '1') return false;
 		}
 		else {
 			if (w.x + 1 >= N) return false;
