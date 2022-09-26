@@ -11,6 +11,9 @@ struct CCTV { int n; int d; int y; int x; };
 vector<CCTV> cctv;
 int pick_dir[8];
 
+const int dx[] = { 1, 0, -1, 0 };
+const int dy[] = { 0, -1, 0, 1 };
+
 
 void input()
 {
@@ -28,12 +31,10 @@ void input()
 
 void check1(int(*area)[MAXNM], CCTV& c, int dir)
 {
-	static int dx[] = { 1, 0, -1, 0 };
-	static int dy[] = { 0, -1, 0, 1 };
-	int y = c.y; int x = c.x; int i = 1;
+	int i = 1;
 	while (true) {
-		int nx = x + i * dx[dir];
-		int ny = y + i * dy[dir];
+		int nx = c.x + i * dx[dir];
+		int ny = c.y + i * dy[dir];
 		if (nx < 0 || ny < 0 || nx >= M || ny >= N || area[ny][nx] == 6) break;
 		if (area[ny][nx] == 0) area[ny][nx] = -1;
 		i++;
@@ -42,14 +43,12 @@ void check1(int(*area)[MAXNM], CCTV& c, int dir)
 
 void check2(int(*area)[MAXNM], CCTV& c, int dir)
 {
-	static int dx[] = { 1, 0, -1, 0 };
-	static int dy[] = { 0, -1, 0, 1 };
 	int comb[2][2] = { {0, 2}, {1, 3} }; //dir 0, dir 1
 	for (int d : comb[dir]) { //2번 함
-		int y = c.y; int x = c.x; int i = 1;
+		int i = 1;
 		while (true) {
-			int nx = x + i * dx[d];
-			int ny = y + i * dy[d];
+			int nx = c.x + i * dx[d];
+			int ny = c.y + i * dy[d];
 			if (nx < 0 || ny < 0 || nx >= M || ny >= N || area[ny][nx] == 6) break;
 			if (area[ny][nx] == 0) area[ny][nx] = -1;
 			i++;
@@ -59,14 +58,12 @@ void check2(int(*area)[MAXNM], CCTV& c, int dir)
 
 void check3(int(*area)[MAXNM], CCTV& c, int dir)
 {
-	static int dx[] = { 1, 0, -1, 0 };
-	static int dy[] = { 0, -1, 0, 1 };
 	int comb[4][2] = { {0, 1}, {1, 2}, {2, 3}, {3, 0} }; //dir 0, 1, 2, 3
 	for (int d : comb[dir]) { //2번 함
-		int y = c.y; int x = c.x; int i = 1;
+		int i = 1;
 		while (true) {
-			int nx = x + i * dx[d];
-			int ny = y + i * dy[d];
+			int nx = c.x + i * dx[d];
+			int ny = c.y + i * dy[d];
 			if (nx < 0 || ny < 0 || nx >= M || ny >= N || area[ny][nx] == 6) break;
 			if (area[ny][nx] == 0) area[ny][nx] = -1;
 			i++;
@@ -76,14 +73,12 @@ void check3(int(*area)[MAXNM], CCTV& c, int dir)
 
 void check4(int(*area)[MAXNM], CCTV& c, int dir)
 {
-	static int dx[] = { 1, 0, -1, 0 };
-	static int dy[] = { 0, -1, 0, 1 };
 	int comb[4][3] = { {0, 1, 2}, {1, 2, 3}, {2, 3, 0}, {3, 0, 1} }; //dir 0, 1, 2, 3
 	for (int d : comb[dir]) { //3번 함
-		int y = c.y; int x = c.x; int i = 1;
+		int i = 1;
 		while (true) {
-			int nx = x + i * dx[d];
-			int ny = y + i * dy[d];
+			int nx = c.x + i * dx[d];
+			int ny = c.y + i * dy[d];
 			if (nx < 0 || ny < 0 || nx >= M || ny >= N || area[ny][nx] == 6) break;
 			if (area[ny][nx] == 0) area[ny][nx] = -1;
 			i++;
@@ -93,14 +88,12 @@ void check4(int(*area)[MAXNM], CCTV& c, int dir)
 
 void check5(int(*area)[MAXNM], CCTV& c, int dir)
 {
-	static int dx[] = { 1, 0, -1, 0 };
-	static int dy[] = { 0, -1, 0, 1 };
 	int comb[4] = { 0, 1, 2, 3 };
 	for (int d : comb) { //4번 함
-		int y = c.y; int x = c.x; int i = 1;
+		int i = 1;
 		while (true) {
-			int nx = x + i * dx[d];
-			int ny = y + i * dy[d];
+			int nx = c.x + i * dx[d];
+			int ny = c.y + i * dy[d];
 			if (nx < 0 || ny < 0 || nx >= M || ny >= N || area[ny][nx] == 6) break;
 			if (area[ny][nx] == 0) area[ny][nx] = -1;
 			i++;
@@ -189,7 +182,7 @@ void dfs(int depth, int s)
 
 void solve()
 {
-	dfs_pick(0, 0);
+	dfs(0, 0);
 	cout << ans;
 }
 
