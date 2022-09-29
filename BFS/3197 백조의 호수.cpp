@@ -1,5 +1,4 @@
 #include <iostream>
-#include <vector>
 #include <queue>
 #include <algorithm>
 using namespace std;
@@ -8,10 +7,13 @@ using namespace std;
 int R, C;
 char lake[MAX][MAX];
 int map[MAX][MAX];
-int ans = 0x7fffffff;
+int chk[MAX][MAX]; //flood fill 확인용, bfs 방문확인용
 
-struct AXIS { int y; int x; };
-bool chk[MAX][MAX] = { false }; //flood fill 확인용, dfs 방문확인용
+struct AXIS { 
+	int y; 
+	int x;  
+	int time;
+};
 queue<AXIS> q;
 AXIS st, en;
 
@@ -34,25 +36,25 @@ void input()
 	for (int y = 0; y < R; y++) {
 		for (int x = 0; x < C; x++) {
 			cin >> lake[y][x];
-			if (!flag && lake[y][x] == 'L') {
-				flag = true;
-				st.y = y; st.x = x;
-				lake[y][x] = '.';
-			}
-			else if (lake[y][x] == 'L') {
-				en.y = y; en.x = x;
-				lake[y][x] = '.';
+			if (lake[y][x] != 'X') {
+				if (lake[y][x] == 'L') {
+					if (!flag) {
+						flag = true;
+						st.y = y; st.x = x;
+					}
+					else {
+						en.y = y; en.x = x;
+					}
+				}
+				q.push({ y, x, 0 });
+				chk[y][x] = 1;
 			}
 		}
 	}
 }
 
-void flood_fill(int& y, int& x, int& cnt) //lake .로 바꿔주고 map에 시간 저장
+void flood_fill() //map에 시간 저장
 {
-	q = {};
-	q.push({ y, x });
-	chk[y][x] = true;
-
 	while (!q.empty()) {
 		AXIS cur = q.front(); q.pop();
 
@@ -61,24 +63,21 @@ void flood_fill(int& y, int& x, int& cnt) //lake .로 바꿔주고 map에 시간
 			int ny = cur.y + dy[d];
 			if (nx < 0 || ny < 0 || nx >= C || ny >= R) continue;
 			if (chk[ny][nx]) continue;
-			chk[ny][nx] = true;
-			if (lake[ny][nx] == 'X') { //얼음이면 깨고 map에 기록 
-				lake[ny][nx] = '.';
-				map[ny][nx] = cnt;
-			}
-			else { //물이면 chk하고 q에 push
-				q.push({ ny, nx });
-			}
+			if (lake[ny][nx] != 'X') continue;
+
+			chk[ny][nx] = 1;
+			map[ny][nx] = cur.time + 1;
+			q.push({ ny, nx, cur.time + 1 });
 		}
 	}
 }
 
 int bfs()
 {
-	fill(&chk[0][0], &chk[MAX - 1][MAX], false);
+	fill(&chk[0][0], &chk[MAX - 1][MAX], 0x7fffffff);
 
 	pq.push({ st.y, st.x, 0 });
-	chk[st.y][st.x] = true;
+	chk[st.y][st.x] = 0;
 
 	while (!pq.empty()) {
 		STATUS cur = pq.top(); pq.pop();
@@ -88,9 +87,11 @@ int bfs()
 			int nx = cur.x + dx[d];
 			int ny = cur.y + dy[d];
 			if (nx < 0 || ny < 0 || nx >= C || ny >= R) continue;
-			if (chk[ny][nx]) continue;
-			STATUS next = { ny, nx, max(cur.max_time, map[ny][nx]) };
-			chk[ny][nx] = true;
+			
+			STATUS next = { ny, nx, max(cur.max_time, map[ny][nx])};
+			if (chk[ny][nx] <= next.max_time) continue;
+			
+			chk[ny][nx] = next.max_time;
 			pq.push(next);
 		}
 	}
@@ -98,23 +99,7 @@ int bfs()
 
 void solve()
 {
-	bool update = true;
-	int cnt = 0;
-	
-	while (update) {
-		fill(&chk[0][0], &chk[MAX - 1][MAX], false);
-		update = false;
-		cnt++;
-		for (int y = 0; y < R; y++) {
-			for (int x = 0; x < C; x++) {
-				if (chk[y][x] == false && lake[y][x] == '.') {
-					flood_fill(y, x, cnt);
-				}
-				if (lake[y][x] == 'X') update = true;
-			}
-		}
-	}
-	
+	flood_fill();
 	cout << bfs();
 }
 
