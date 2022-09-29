@@ -12,7 +12,6 @@ int chk[MAX][MAX]; //flood fill 확인용, bfs 방문확인용
 struct AXIS { 
 	int y; 
 	int x;  
-	int time;
 };
 queue<AXIS> q;
 AXIS st, en;
@@ -46,7 +45,7 @@ void input()
 						en.y = y; en.x = x;
 					}
 				}
-				q.push({ y, x, 0 });
+				q.push({ y, x });
 				chk[y][x] = 1;
 			}
 		}
@@ -66,8 +65,8 @@ void flood_fill() //map에 시간 저장
 			if (lake[ny][nx] != 'X') continue;
 
 			chk[ny][nx] = 1;
-			map[ny][nx] = cur.time + 1;
-			q.push({ ny, nx, cur.time + 1 });
+			map[ny][nx] = map[cur.y][cur.x] + 1;
+			q.push({ ny, nx });
 		}
 	}
 }
