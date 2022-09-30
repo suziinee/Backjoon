@@ -27,14 +27,18 @@ AXIS attack(int m, int (*play)[MAXNM]) //(N, m)에 위치한 궁수가 쏠 수 �
 	int min_dist = 0x7fffffff;
 	AXIS ret = { -1, -1 };
 
+	int front_x = (m - (D - 1) < 0) ? 0 : (m - (D - 1));
+	int after_x = (m + (D - 1) >= M) ? (M - 1) : (m + (D - 1));
+	int h = ((N - 1) - (D - 1) < 0) ? 0 : ((N - 1) - (D - 1));
+
 	//가장 왼쪽부터 탐색해야함
-	for (int x = 0; x < M; x++) {
-		for (int y = 0; y < N; y++) {
+	for (int x = front_x; x <= after_x; x++) {
+		for (int y = N - 1; y >= h; y--) {
 			int dist = abs(N - y) + abs(m - x);
 			if (dist > D || play[y][x] == 0) continue;
 			if (dist < min_dist) {
+				ret.x = x; ret.y = y;
 				min_dist = dist;
-				ret.y = y; ret.x = x;
 			}
 		}
 	}
