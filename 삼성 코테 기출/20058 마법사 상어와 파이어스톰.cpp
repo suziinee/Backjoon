@@ -2,13 +2,12 @@
 #include <cmath>
 using namespace std;
 
-#define MAXN 64
 int N, Q, LEN;
-int map[2][MAXN][MAXN];
-int chk[MAXN][MAXN];
+int map[2][64][64];
 int L[1000];
 int cur;
 
+bool chk[64][64];
 const int dx[] = { 0, 1, 0, -1 };
 const int dy[] = { -1, 0, 1, 0 };
 
@@ -19,7 +18,7 @@ void input()
 	LEN = pow(2, N);
 	for (int y = 0; y < LEN; y++) {
 		for (int x = 0; x < LEN; x++) {
-			cin >> map[cur][y][x];
+			cin >> map[0][y][x];
 		}
 	}
 	for (int i = 0; i < Q; i++) {
@@ -27,41 +26,40 @@ void input()
 	}
 }
 
-//(Y, X)에서 시작하는 길이 n인 격자 90도 회전
-void rotate(const int& cur, const int& next, int Y, int X, const int& len)
+void rotate(int sy, int sx, int n, const int& next)
 {
-	//cur 좌표 기준
-	int nx = X + len - 1;
-	for (int y = Y; y < Y + len; y++) {
-		int ny = Y;
-		for (int x = X; x < X + len; x++) {
-			map[next][ny][nx] = map[cur][y][x];
-			ny++;
+	int nx = sx;
+	for (int y = sy; y < sy + n; y++) {
+		int ny = sy + n - 1;
+		for (int x = sx; x < sx + n; x++) {
+			map[next][y][x] = map[cur][ny][nx];
+			ny--;
 		}
-		nx--;
+		nx++;
 	}
 }
 
-void move_(const int& l)
+void firestorm(int n)
 {
-	if (l == 0) return;
-
+	if (n == 0) return;
 	int next = (cur + 1) % 2;
-	int len = pow(2, l);
-	for (int y = 0; y < LEN; y += len) {
-		for (int x = 0; x < LEN; x += len) {
-			rotate(cur, next, y, x, len);
+
+	for (int y = 0; y < LEN; y += n) {
+		for (int x = 0; x < LEN; x += n) {
+			rotate(y, x, n, next);
 		}
 	}
+
 	cur = next;
 }
 
-void decrease()
+void melt()
 {
 	int next = (cur + 1) % 2;
 
 	for (int y = 0; y < LEN; y++) {
 		for (int x = 0; x < LEN; x++) {
+
 			int cnt = 0;
 			for (int d = 0; d < 4; d++) {
 				int nx = x + dx[d];
@@ -70,6 +68,7 @@ void decrease()
 				if (map[cur][ny][nx] == 0) continue;
 				cnt++;
 			}
+
 			if (cnt >= 3 || map[cur][y][x] == 0) {
 				map[next][y][x] = map[cur][y][x];
 			}
@@ -78,20 +77,18 @@ void decrease()
 			}
 		}
 	}
-
 	cur = next;
 }
 
 void dfs(int y, int x, int& cnt)
 {
 	cnt++;
+	chk[y][x] = true;
 	for (int d = 0; d < 4; d++) {
 		int nx = x + dx[d];
 		int ny = y + dy[d];
 		if (nx < 0 || ny < 0 || nx >= LEN || ny >= LEN) continue;
-		if (map[cur][ny][nx] == 0) continue;
-		if (chk[ny][nx]) continue;
-		chk[ny][nx] = 1;
+		if (map[cur][ny][nx] == 0 || chk[ny][nx]) continue;
 		dfs(ny, nx, cnt);
 	}
 }
@@ -99,27 +96,23 @@ void dfs(int y, int x, int& cnt)
 void solve()
 {
 	for (int i = 0; i < Q; i++) {
-		move_(L[i]);
-		decrease();
+		firestorm(pow(2, L[i]));
+		melt();
 	}
 
-	int sum = 0;
-	int max = 0;
+	int sum = 0; int max_cnt = 0;
 	for (int y = 0; y < LEN; y++) {
 		for (int x = 0; x < LEN; x++) {
-			sum += map[cur][y][x];
-			
-			if (chk[y][x] == 0 && map[cur][y][x]) {
+			if (map[cur][y][x]) sum += map[cur][y][x];
+			if (map[cur][y][x] && chk[y][x] == false) {
 				int cnt = 0;
-				chk[y][x] = 1;
 				dfs(y, x, cnt);
-				if (cnt > max) max = cnt;
+				max_cnt = max(cnt, max_cnt);
 			}
 		}
 	}
-	if (max <= 1) max = 0;
-
-	cout << sum << "\n" << max;
+	
+	cout << sum << "\n" << max_cnt;
 }
 
 
