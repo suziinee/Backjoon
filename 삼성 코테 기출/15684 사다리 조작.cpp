@@ -15,79 +15,38 @@ void input()
 	for (int i = 0; i < M; i++) {
 		cin >> a >> b;
 		map[a][b] = 1;
-		map[a][b + 1] = 2;
 	}
 }
 
 bool check()
 {
-	for (int x = 1; x <= N; x++) {
-		//(1, x)에서 출발)
-		int curx = x; int cury = 1;
-		bool down = true;
+	for (int i = 1; i <= N; i++) { //사다리가 아닌 세로선
+		int x = i;
+		int y = 1;
 
-		while (cury <= H) {
-			switch (map[cury][curx]) {
-			case 0: {
-				cury++;
-				down = true;
-				break;
-			}
-			case 1: {
-				if (down) { //내려온 다음이면 오른쪽으로 가기
-					down = false;
-					curx++;
-				}
-				else { //왼쪽에서 온거면 내려가기
-					cury++;
-					down = true;
-				}
-				break;
-			}
-			case 2: {
-				if (down) { //내려온 다음이면 왼쪽으로 가기
-					down = false;
-					curx--;
-				}
-				else { //오른쪽에서 온거면 내려가기
-					cury++;
-					down = true;
-				}
-				break;
-			}
-			}
+		while (y < H + 1) { //양옆에 있는 사다리 확인
+			if (map[y][x - 1]) x--; //왼쪽 이동
+			else if (map[y][x]) x++; //오른쪽 이동
+			y++; //아래로 내려가는건 default
 		}
-		if (curx != x) return false;
+
+		if (x != i) return false;
 	}
 	return true;
 }
 
 void dfs(int cnt)
 {
-	if (cnt >= ans) return;
-	if (cnt > 3) return;
-	if (check()) {
-		if (ans > cnt) ans = cnt;
-		return;
-	}
-
+	if (cnt >= ans) return; //가지치기
+	if (cnt > 3) return; //문제 조건
+	if (ans > cnt && check()) ans = cnt; //최소값 갱신
+	
 	for (int y = 1; y <= H; y++) {
-		for (int x = 1; x <= N; x++) {
-			if (map[y][x]) continue; //0인 곳에 대해서
-			if (x - 1 >= 1 && map[y][x - 1] == 0) { //왼쪽으로 가로선 놓기
-				map[y][x] = 2;
-				map[y][x - 1] = 1;
-				dfs(cnt + 1);
-				map[y][x] = 0;
-				map[y][x - 1] = 0;
-			}
-			if (x + 1 <= N && map[y][x + 1] == 0) { //오른쪽으로 가로선 놓기
-				map[y][x] = 1;
-				map[y][x + 1] = 2;
-				dfs(cnt + 1);
-				map[y][x] = 0;
-				map[y][x + 1] = 0;
-			}
+		for (int x = 1; x < N; x++) {
+			if (map[y][x] || map[y][x - 1] || map[y][x + 1]) continue;
+			map[y][x] = 1;
+			dfs(cnt + 1);
+			map[y][x] = 0;
 		}
 	}
 }
