@@ -5,7 +5,6 @@ using namespace std;
 #define MAXH 30
 int N, M, H;
 int map[MAXH + 1][MAXN + 1];
-int ans = 0x7fffffff;
 
 
 void input()
@@ -35,27 +34,33 @@ bool check()
 	return true;
 }
 
-void dfs(int cnt)
+bool dfs(int n, int cnt)
 {
-	if (cnt >= ans) return; //가지치기
-	if (cnt > 3) return; //문제 조건
-	if (ans > cnt && check()) ans = cnt; //최소값 갱신
+	if (n == cnt) {
+		if (check()) return true;
+		return false;
+	}
 	
 	for (int y = 1; y <= H; y++) {
 		for (int x = 1; x < N; x++) {
 			if (map[y][x] || map[y][x - 1] || map[y][x + 1]) continue;
 			map[y][x] = 1;
-			dfs(cnt + 1);
+			if (dfs(n + 1, cnt)) return true;
 			map[y][x] = 0;
 		}
 	}
+	return false;
 }
 
 void solve()
 {
-	dfs(0);
-	if (ans == 0x7fffffff) cout << -1;
-	else cout << ans;
+	for (int i = 0; i <= 3; i++) {
+		if (dfs(0, i)) {
+			cout << i;
+			return;
+		}
+	}
+	cout << -1;
 }
 
 
