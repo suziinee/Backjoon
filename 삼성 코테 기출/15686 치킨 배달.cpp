@@ -3,63 +3,63 @@
 #include <algorithm>
 using namespace std;
 
-int n, m;
-struct AXIS {
-	int x; int y;
-};
-vector<AXIS> house;
-vector<AXIS> chick;
+int N, M;
 int ans = 0x7fffffff;
+
+struct AXIS { int y; int x; };
+vector<AXIS> house;
+vector<AXIS> chicken;
+AXIS pick[13];
+
 
 void input()
 {
-	cin >> n;
-	cin >> m;
-
-	int tmp;
-	AXIS t;
-	for (int x = 0; x < n; x++) {
-		for (int y = 0; y < n; y++) {
-			cin >> tmp;
-			t.x = x; t.y = y;
-			if (tmp == 1) house.push_back(t);
-			if (tmp == 2) chick.push_back(t);
+	cin >> N >> M;
+	int n;
+	for (int y = 0; y < N; y++) {
+		for (int x = 0; x < N; x++) {
+			cin >> n;
+			switch (n) {
+			case 1: house.push_back({ y, x }); break;
+			case 2: chicken.push_back({ y, x }); break;
+			case 0: break;
+			}
 		}
 	}
 }
 
-void output()
+int dist_calcul()
 {
-	cout << ans;
+	int sum = 0;
+	for (AXIS h : house) {
+		int min_dist = 0x7fffffff;
+		for (int i = 0; i < M; i++) {
+			int dist = abs(h.y - pick[i].y) + abs(h.x - pick[i].x);
+			min_dist = min(dist, min_dist);
+		}
+		sum += min_dist;
+	}
+	return sum;
 }
 
-vector<AXIS> pick;
-void dfs(int start)
+void dfs(int s, int n)
 {
-	if (pick.size() == m) {
-		int sum = 0;
-		for (int i = 0; i < house.size(); i++) {
-			int tmp = 0x7fffffff;
-			for (int j = 0; j < m; j++) {
-				tmp = min(abs(pick[j].x - house[i].x) + abs(pick[j].y - house[i].y), tmp);
-			}
-			sum += tmp;
-		}
-
-		if (sum < ans) ans = sum;
+	if (n == M) {
+		int ret = dist_calcul();
+		if (ret < ans) ans = ret;
 		return;
 	}
 
-	for (int i = start; i < chick.size(); i++) {
-		pick.push_back(chick[i]);
-		dfs(i + 1);
-		pick.pop_back();
+	for (int i = s; i < (int)chicken.size(); i++) {
+		pick[n] = chicken[i];
+		dfs(i + 1, n + 1);
 	}
 }
 
 void solve()
 {
-	dfs(0);
+	dfs(0, 0);
+	cout << ans;
 }
 
 
@@ -67,6 +67,5 @@ int main()
 {
 	input();
 	solve();
-	output();
 	return 0;
 }
