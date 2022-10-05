@@ -1,207 +1,88 @@
 #include <iostream>
-#include <vector>
 using namespace std;
 
 #define MAXN 499
 int N;
-int map[MAXN][MAXN];
-int chk[MAXN][MAXN];
 int ans;
+int map[MAXN][MAXN];
+int wind_dx[4][10] = {
+	{1, 1, 0, 0, -2, 0, 0, -1, -1, -1},
+	{-1, 1, -2, 2, 0, -1, 1, -1, 1, 0},
+	{-1, -1, 0, 0, 2, 0, 0, 1, 1, 1},
+	{-1, 1, -2, 2, 0, -1, 1, -1, 1, 0} };
+int wind_dy[4][10] = {
+	{-1, 1, -2, 2, 0, -1, 1, -1, 1, 0},
+	{-1, -1, 0, 0, 2, 0, 0, 1, 1, 1},
+	{-1, 1, -2, 2, 0, -1, 1, -1, 1, 0},
+	{1, 1, 0, 0, -2, 0, 0, -1, -1, -1} };
+int wind_pt[9] = { 1, 1, 2, 2, 5, 7, 7, 10, 10 };
+
+const int dx[] = { -1, 0, 1, 0 }; //left down right up
+const int dy[] = { 0, 1, 0, -1 };
 
 
 void input()
 {
 	cin >> N;
-	for (int y = 0; y < N; y++) {
-		for (int x = 0; x < N; x++) {
+	for (int y = 0; y < N; ++y) {
+		for (int x = 0; x < N; ++x) {
 			cin >> map[y][x];
 		}
 	}
 }
 
-
-//(y, x)에서 (ny, nx)로 d 방향으로 토네이도가 불었다
-void spread(int y, int x, int ny, int nx, int d)
+void tornado(int y, int x, int d) //(y, x)로 d 방향의 바람이 불었음
 {
-	static int dx[] = { -1, 0, 1, 0 };
-	static int dy[] = { 0, 1, 0, -1 };
+	int sum = 0; //a를 구하기 위해
+	
+	for (int i = 0; i < 9; i++) {
+		int nx = x + wind_dx[d][i];
+		int ny = y + wind_dy[d][i];
+		int sand = (map[y][x] * wind_pt[i]) / 100;
+		sum += sand;
+		if (nx < 0 || ny < 0 || nx >= N || ny >= N) {
+			ans += sand;
+		}
+		else {
+			map[ny][nx] += sand;
+		}
+	}
 
-	switch (d) {
-	case 0: {
-		int tmp = map[ny][nx];
-		map[ny][nx] = 0;
-		int sum = 0;
-		//1%
-		if (y - 1 >= 0) map[y - 1][x] += (int)(tmp * 0.01);
-		else ans += (int)(tmp * 0.01);
-		if (y + 1 < N) map[y + 1][x] += (int)(tmp * 0.01);
-		else ans += (int)(tmp * 0.01);
-		sum += (int)(tmp * 0.01) * 2;
-		//7%
-		if (ny - 1 >= 0) map[ny - 1][nx] += (int)(tmp * 0.07);
-		else ans += (int)(tmp * 0.07);
-		if (ny + 1 < N) map[ny + 1][nx] += (int)(tmp * 0.07);
-		else ans += (int)(tmp * 0.07);
-		sum += (int)(tmp * 0.07) * 2;
-		//2%
-		if (ny - 2 >= 0) map[ny - 2][nx] += (int)(tmp * 0.02);
-		else ans += (int)(tmp * 0.02);
-		if (ny + 2 < N) map[ny + 2][nx] += (int)(tmp * 0.02);
-		else ans += (int)(tmp * 0.02);
-		sum += (int)(tmp * 0.02) * 2;
-		//10%
-		if (ny - 1 >= 0 && nx - 1 >= 0) map[ny - 1][nx - 1] += (int)(tmp * 0.1);
-		else ans += (int)(tmp * 0.1);
-		if (ny + 1 < N && nx - 1 >= 0) map[ny + 1][nx - 1] += (int)(tmp * 0.1);
-		else ans += (int)(tmp * 0.1);
-		sum += (int)(tmp * 0.1) * 2;
-		//5%
-		if (nx - 2 >= 0) map[ny][nx - 2] += (int)(tmp * 0.05);
-		else ans += (int)(tmp * 0.05);
-		sum += (int)(tmp * 0.05);
-		//a
-		if (nx - 1 >= 0) map[ny][nx - 1] += (tmp - sum);
-		else ans += (tmp - sum);
+	int a = map[y][x] - sum;
+	int ax = x + wind_dx[d][9];
+	int ay = y + wind_dy[d][9];
+	if (ax < 0 || ay < 0 || ax >= N || ay >= N) {
+		ans += a;
 	}
-	case 1: {
-		int tmp = map[ny][nx];
-		map[ny][nx] = 0;
-		int sum = 0;
-		//1%
-		if (x - 1 >= 0)map[y][x - 1] += (int)(tmp * 0.01);
-		else ans += (int)(tmp * 0.01);
-		if (x + 1 < N) map[y][x + 1] += (int)(tmp * 0.01);
-		else ans += (int)(tmp * 0.01);
-		sum += (int)(tmp * 0.01) * 2;
-		//7%
-		if (nx - 1 >= 0) map[ny][nx - 1] += (int)(tmp * 0.07);
-		else ans += (int)(tmp * 0.07);
-		if (nx + 1 < N) map[ny][nx + 1] += (int)(tmp * 0.07);
-		else ans += (int)(tmp * 0.07);
-		sum += (int)(tmp * 0.07) * 2;
-		//2%
-		if (nx - 2 >= 0) map[ny][nx - 2] += (int)(tmp * 0.02);
-		else ans += (int)(tmp * 0.02);
-		if (nx + 2 < N) map[ny][nx + 2] += (int)(tmp * 0.02);
-		else ans += (int)(tmp * 0.02);
-		sum += (int)(tmp * 0.02) * 2;
-		//10%
-		if (ny + 1 < N && nx - 1 >= 0) map[ny + 1][nx - 1] += (int)(tmp * 0.1);
-		else ans += (int)(tmp * 0.1);
-		if (ny + 1 < N && nx + 1 < N) map[ny + 1][nx + 1] += (int)(tmp * 0.1);
-		else ans += (int)(tmp * 0.1);
-		sum += (int)(tmp * 0.1) * 2;
-		//5%
-		if (ny + 2 < N) map[ny + 2][nx] += (int)(tmp * 0.05);
-		else ans += (int)(tmp * 0.05);
-		sum += (int)(tmp * 0.05);
-		//a
-		if (ny + 1 < N) map[ny + 1][nx] += (tmp - sum);
-		else ans += (tmp - sum);
+	else {
+		map[ay][ax] += a;
 	}
-	case 2: {
-		int tmp = map[ny][nx];
-		map[ny][nx] = 0;
-		int sum = 0;
-		//1%
-		if (y - 1 >= 0) map[y - 1][x] += (int)(tmp * 0.01);
-		else ans += (int)(tmp * 0.01);
-		if (y + 1 < N) map[y + 1][x] += (int)(tmp * 0.01);
-		else ans += (int)(tmp * 0.01);
-		sum += (int)(tmp * 0.01) * 2;
-		//7%
-		if (ny - 1 >= 0) map[ny - 1][nx] += (int)(tmp * 0.07);
-		else ans += (int)(tmp * 0.07);
-		if (ny + 1 < N) map[ny + 1][nx] += (int)(tmp * 0.07);
-		else ans += (int)(tmp * 0.07);
-		sum += (int)(tmp * 0.07) * 2;
-		//2%
-		if (ny - 2 >= 0) map[ny - 2][nx] += (int)(tmp * 0.02);
-		else ans += (int)(tmp * 0.02);
-		if (ny + 2 < N) map[ny + 2][nx] += (int)(tmp * 0.02);
-		else ans += (int)(tmp * 0.02);
-		sum += (int)(tmp * 0.02) * 2;
-		//10%
-		if (ny - 1 >= 0 && nx + 1 < N) map[ny - 1][nx + 1] += (int)(tmp * 0.1);
-		else ans += (int)(tmp * 0.1);
-		if (ny + 1 < N && nx + 1 < N) map[ny + 1][nx + 1] += (int)(tmp * 0.1);
-		else ans += (int)(tmp * 0.1);
-		sum += (int)(tmp * 0.1) * 2;
-		//5%
-		if (nx + 2 < N) map[ny][nx + 2] += (int)(tmp * 0.05);
-		else ans += (int)(tmp * 0.05);
-		sum += (int)(tmp * 0.05);
-		//a
-		if (nx + 1 < N) map[ny][nx + 1] += (tmp - sum);
-		else ans += (tmp - sum);
-	}
-	case 3: {
-		int tmp = map[ny][nx];
-		map[ny][nx] = 0;
-		int sum = 0;
-		//1%
-		if (x - 1 >= 0)map[y][x - 1] += (int)(tmp * 0.01);
-		else ans += (int)(tmp * 0.01);
-		if (x + 1 < N) map[y][x + 1] += (int)(tmp * 0.01);
-		else ans += (int)(tmp * 0.01);
-		sum += (int)(tmp * 0.01) * 2;
-		//7%
-		if (nx - 1 >= 0) map[ny][nx - 1] += (int)(tmp * 0.07);
-		else ans += (int)(tmp * 0.07);
-		if (nx + 1 < N) map[ny][nx + 1] += (int)(tmp * 0.07);
-		else ans += (int)(tmp * 0.07);
-		sum += (int)(tmp * 0.07) * 2;
-		//2%
-		if (nx - 2 >= 0) map[ny][nx - 2] += (int)(tmp * 0.02);
-		else ans += (int)(tmp * 0.02);
-		if (nx + 2 < N) map[ny][nx + 2] += (int)(tmp * 0.02);
-		else ans += (int)(tmp * 0.02);
-		sum += (int)(tmp * 0.02) * 2;
-		//10%
-		if (ny - 1 >= 0 && nx - 1 >= 0) map[ny - 1][nx - 1] += (int)(tmp * 0.1);
-		else ans += (int)(tmp * 0.1);
-		if (ny - 1 >= 0 && nx + 1 < N) map[ny - 1][nx + 1] += (int)(tmp * 0.1);
-		else ans += (int)(tmp * 0.1);
-		sum += (int)(tmp * 0.1) * 2;
-		//5%
-		if (ny - 2 >= 0) map[ny - 2][nx] += (int)(tmp * 0.05);
-		else ans += (int)(tmp * 0.05);
-		sum += (int)(tmp * 0.05);
-		//a
-		if (ny - 1 >= 0) map[ny - 1][nx] += (tmp - sum);
-		else ans += (tmp - sum);
-	}
-	}
+	map[y][x] = 0;
 }
-
 
 void solve()
 {
-	static int dx[] = { -1, 0, 1, 0 };
-	static int dy[] = { 0, 1, 0, -1 };
-	int x = N / 2;
+	bool chk[MAXN][MAXN] = { false };
 	int y = N / 2;
+	int x = N / 2;
 	int d = 3;
-	chk[y][x] = 1;
+	chk[y][x] = true;
 
 	for (int i = 0; i < N * N - 1; i++) {
 		int nd = (d + 1) % 4;
 		int nx = x + dx[nd];
 		int ny = y + dy[nd];
-		if (chk[ny][nx]) { //방향 유지
+		if (chk[ny][nx]) {
 			nx = x + dx[d];
 			ny = y + dy[d];
-			spread(y, x, ny, nx, d);
-			chk[ny][nx] = 1;
-			x = nx; y = ny; 
+			nd = d;
 		}
-		else { //방향 변경 가능
-			spread(y, x, ny, nx, nd);
-			chk[ny][nx] = 1;
-			x = nx; y = ny; d = nd;
-		}
+		tornado(ny, nx, nd);
+		chk[ny][nx] = true;
+		x = nx;
+		y = ny;
+		d = nd;
 	}
-
 	cout << ans;
 }
 
