@@ -46,6 +46,19 @@ void counter_clock(int y)
 	map[y].push_back(tmp);
 }
 
+void rotate(const ROT& r) //회전
+{
+	for (int y = 0; y < N; y++) {
+		if ((y + 1) % r.x) continue;
+		if (r.d) { //반시계
+			for (int k = 0; k < r.k; k++) counter_clock(y);
+		}
+		else { //시계
+			for (int k = 0; k < r.k; k++) clock(y);
+		}
+	}
+}
+
 bool flood_fill(int y, int x)
 {
 	bool flag = false;
@@ -112,7 +125,7 @@ bool flood_fill(int y, int x)
 	return flag;
 }
 
-double get_avg()
+double get_avg() 
 {
 	int sum = 0; int cnt = 0;
 	for (int y = 0; y < N; y++) {
@@ -126,21 +139,23 @@ double get_avg()
 	return (double)sum / cnt;
 }
 
+void modify() //평균 구해서 원판 수정
+{
+	double avg = get_avg();
+	for (int y = 0; y < N; y++) {
+		for (int x = 0; x < M; x++) {
+			if (map[y][x] == 0) continue;
+			if (map[y][x] > avg) map[y][x] -= 1;
+			else if (map[y][x] < avg) map[y][x] += 1;
+		}
+	}
+}
+
 void solve()
 {
 	for (ROT r : rot) {
-		//x의 배수가 되는 행을 먼저 찾기
-		for (int y = 0; y < N; y++) {
-			if ((y + 1) % r.x) continue;
-			if (r.d) { //반시계
-				for (int k = 0; k < r.k; k++) counter_clock(y);
-			}
-			else { //시계
-				for (int k = 0; k < r.k; k++) clock(y);
-			}
-		}
+		rotate(r);
 
-		//인접 check
 		bool chk = false;
 		for (int y = 0; y < N; y++) {
 			for (int x = 0; x < M; x++) {
@@ -150,16 +165,7 @@ void solve()
 				}
 			}
 		}
-		if (!chk) { //평균 구해서 계산
-			double avg = get_avg();
-			for (int y = 0; y < N; y++) {
-				for (int x = 0; x < M; x++) {
-					if (map[y][x] == 0) continue;
-					if (map[y][x] > avg) map[y][x] -= 1;
-					else if (map[y][x] < avg) map[y][x] += 1;
-				}
-			}
-		}
+		if (!chk) modify();
 	}
 
 	int sum = 0;
