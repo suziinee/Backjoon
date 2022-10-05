@@ -6,13 +6,15 @@ using namespace std;
 #define MAXNM 50
 int N, M, T;
 deque<int> map[MAXNM];
-int cur;
 
 struct ROT { int x; int d; int k; };
 deque<ROT> rot;
 
 struct AXIS { int y; int x; int val; };
 queue<AXIS> q;
+
+const int dx[] = { 1, 0, -1, 0 }; //left down right up
+const int dy[] = { 0, 1, 0, -1 };
 
 
 void input()
@@ -59,70 +61,45 @@ void rotate(const ROT& r) //회전
 	}
 }
 
-bool flood_fill(int y, int x)
+void flood_fill(int y, int x)
 {
-	bool flag = false;
 	q = {};
-
-	AXIS backup = { y, x };
-	int tmp = map[y][x];
-	q.push({ y, x, map[y][x]});
+	q.push({ y, x, map[y][x] });
 	map[y][x] = 0;
 
 	while (!q.empty()) {
-		AXIS data = q.front(); q.pop();
-		if (data.y == 0) {
-			int nx, ny;
-			for (int d = 0; d < 3; d++) { //right down left
-				switch (d) {
-				case 0: nx = (data.x + 1) % M; ny = data.y; break;
-				case 1: nx = data.x; ny = data.y + 1; break;
-				case 2: nx = (data.x + M - 1) % M; ny = data.y; break;
-				}
-				if (map[ny][nx] == data.val) {
-					q.push({ ny, nx, map[ny][nx]});
-					map[ny][nx] = 0;
-					flag = true;
-				}
-			}
-		}
-		else if (data.y == N - 1) {
-			int nx, ny;
-			for (int d = 0; d < 3; d++) { //right up left
-				switch (d) {
-				case 0: nx = (data.x + 1) % M; ny = data.y; break;
-				case 1: nx = data.x; ny = data.y - 1; break;
-				case 2: nx = (data.x + M - 1) % M; ny = data.y; break;
-				}
-				if (map[ny][nx] == data.val) {
-					q.push({ ny, nx, map[ny][nx] });
-					map[ny][nx] = 0;
-					flag = true;
-				}
-			}
-		}
-		else {
-			int nx, ny;
-			for (int d = 0; d < 4; d++) { //right down left up
-				switch (d) {
-				case 0: nx = (data.x + 1) % M; ny = data.y; break;
-				case 1: nx = data.x; ny = data.y + 1; break;
-				case 2: nx = (data.x + M - 1) % M; ny = data.y; break;
-				case 3: nx = data.x; ny = data.y - 1; break;
-				}
-				if (map[ny][nx] == data.val) {
-					q.push({ ny, nx, map[ny][nx] });
-					map[ny][nx] = 0;
-					flag = true;
-				}
+		AXIS cur = q.front(); q.pop();
+		for (int d = 0; d < 4; d++) {
+			int nx = (cur.x + dx[d] + M) % M; //x는 rotation 시켜놓음
+			int ny = cur.y + dy[d];
+			if (ny < 0 || ny >= N) continue; //y만 범위 확인하기
+			if (map[ny][nx] == cur.val) {
+				q.push({ ny, nx, map[ny][nx] });
+				map[ny][nx] = 0;
 			}
 		}
 	}
+}
 
-	if (!flag) { //인접한 요소가 하나도 없었음
-		map[backup.y][backup.x] = tmp;
+bool erase()
+{
+	bool ret = false;
+	for (int y = 0; y < N; y++) {
+		for (int x = 0; x < M; x++) {
+			if (map[y][x] == 0) continue;
+			for (int d = 0; d < 4; d++) {
+				int nx = (x + dx[d] + M) % M; //x는 rotation 시켜놓음
+				int ny = y + dy[d];
+				if (ny < 0 || ny >= N) continue; //y만 범위 확인하기
+				if (map[y][x] == map[ny][nx]) {
+					flood_fill(y, x);
+					ret = true;
+					break;
+				}
+			}
+		}
 	}
-	return flag;
+	return ret;
 }
 
 double get_avg() 
@@ -155,17 +132,7 @@ void solve()
 {
 	for (ROT r : rot) {
 		rotate(r);
-
-		bool chk = false;
-		for (int y = 0; y < N; y++) {
-			for (int x = 0; x < M; x++) {
-				if (map[y][x]) {
-					bool ret = flood_fill(y, x);
-					if (ret) chk = true;
-				}
-			}
-		}
-		if (!chk) modify();
+		if (!erase()) modify();
 	}
 
 	int sum = 0;
