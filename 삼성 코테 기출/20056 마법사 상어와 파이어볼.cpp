@@ -5,129 +5,106 @@ using namespace std;
 #define MAXN 50
 int N, M, K;
 
-struct FIREBALL { int m; int s; int d; };
-vector<FIREBALL> map[2][MAXN][MAXN];
-int cur = 0;
+struct FIREBALL {
+	int m, s, d;
+};
+vector<FIREBALL> map[MAXN][MAXN];
+
+const int dx[] = { 0, 1, 1, 1, 0, -1, -1, -1 };
+const int dy[] = { -1, -1, 0, 1, 1, 1, 0, -1 };
 
 
 void input()
 {
 	cin >> N >> M >> K;
 	int y, x, m, s, d;
-	for (int i = 0; i < M; i++) {
+	for (int i = 1; i <= M; i++) {
 		cin >> y >> x >> m >> s >> d;
-		y--; x--; 
-		map[cur][y][x].push_back({ m, s, d });
+		y--; x--;
+		map[y][x].push_back({ m, s, d });
 	}
 }
 
-
-void move()
+void move_fireball()
 {
-	static int dx[] = { 0, 1, 1, 1, 0, -1, -1, -1 };
-	static int dy[] = { -1, -1, 0, 1, 1, 1, 0, -1 };
-
-	int next = (cur + 1) % 2;
+	vector<FIREBALL> back[MAXN][MAXN];
 
 	for (int y = 0; y < N; y++) {
 		for (int x = 0; x < N; x++) {
-			if (map[cur][y][x].empty()) continue;
-			for (FIREBALL f : map[cur][y][x]) {
-				int nx = (x + (f.s % N) * dx[f.d] + N) % N;
-				int ny = (y + (f.s % N) * dy[f.d] + N) % N;
-				if (nx<0 || ny<0 || nx>=N || ny>=N) continue;
-				map[next][ny][nx].push_back({ f.m, f.s, f.d });
+			if (!map[y][x].empty()) {
+				for (FIREBALL f : map[y][x]) {
+					int nx = (x + dx[f.d] * (f.s % N) + N) % N;
+					int ny = (y + dy[f.d] * (f.s % N) + N) % N;
+					back[ny][nx].push_back({ f });
+				}
 			}
 		}
 	}
 
-	for (int y = 0; y < N; y++) {
-		for (int x = 0; x < N; x++) {
-			map[cur][y][x].clear();
-		}
-	}
-
-	cur = next;
+	copy(&back[0][0], &back[MAXN - 1][MAXN], &map[0][0]);
 }
 
-
-void join_and_divide()
+void unite_fireball()
 {
-	int next = (cur + 1) % 2;
+	vector<FIREBALL> back[MAXN][MAXN];
 
 	for (int y = 0; y < N; y++) {
 		for (int x = 0; x < N; x++) {
-			if (map[cur][y][x].size() < 2) {
-				if (map[cur][y][x].empty()) continue;
-				else map[next][y][x].push_back(map[cur][y][x][0]);
+			if (map[y][x].empty()) {
 				continue;
 			}
-
-			int m_sum = 0;
-			int s_sum = 0;
-			int s_cnt = 0;
-			vector<int> f_dir;
-			for (FIREBALL f : map[cur][y][x]) {
-				m_sum += f.m;
-				s_sum += f.s;
-				s_cnt++;
-				f_dir.push_back(f.d);
+			else if (map[y][x].size() == 1) {
+				back[y][x].push_back(map[y][x][0]);
 			}
-			
-			int m = m_sum / 5;
-			if (m) {
-				int s = s_sum / s_cnt;
-
-				int same_flag = 1;
-				int tmp = f_dir[0] % 2;
-				for (int i = 1; i < s_cnt; i++) {
-					if (f_dir[i] % 2 != tmp) {
-						same_flag = 0; break;
-					}
+			else {
+				int sum_m = 0;
+				int sum_s = 0;
+				int init_d = (map[y][x][0].d % 2);
+				bool flag = true;
+				for (FIREBALL f : map[y][x]) {
+					sum_m += f.m;
+					sum_s += f.s;
+					if (f.d % 2 != init_d) flag = false;
 				}
 
-				if (same_flag) {  //0, 2, 4, 6
-					for (int i = 0; i < 4; i++) {
-						map[next][y][x].push_back({ m, s, i * 2 });
+				sum_m /= 5;
+				if (sum_m) {
+					sum_s /= map[y][x].size();
+					if (flag) {
+						for (int i = 0; i < 4; i++) {
+							back[y][x].push_back({ sum_m, sum_s, i * 2 });
+						}
 					}
-				}
-				else { //1, 3, 5, 7
-					for (int i = 0; i < 4; i++) {
-						map[next][y][x].push_back({ m, s, i * 2 + 1 });
+					else {
+						for (int i = 0; i < 4; i++) {
+							back[y][x].push_back({ sum_m, sum_s, i * 2 + 1 });
+						}
 					}
 				}
 			}
 		}
 	}
 
-	for (int y = 0; y < N; y++) {
-		for (int x = 0; x < N; x++) {
-			map[cur][y][x].clear();
-		}
-	}
-
-	cur = next;
+	copy(&back[0][0], &back[MAXN - 1][MAXN], &map[0][0]);
 }
-
 
 void solve()
 {
 	for (int i = 0; i < K; i++) {
-		move();
-		join_and_divide();
+		move_fireball();
+		unite_fireball();
 	}
 
-	int sum = 0;
+	int ans = 0;
 	for (int y = 0; y < N; y++) {
 		for (int x = 0; x < N; x++) {
-			if (map[cur][y][x].empty()) continue;
-			for (FIREBALL f : map[cur][y][x]) {
-				sum += f.m;
+			if (map[y][x].empty()) continue;
+			for (FIREBALL f : map[y][x]) {
+				ans += f.m;
 			}
 		}
 	}
-
-	cout << sum;
+	cout << ans;
 }
 
 
