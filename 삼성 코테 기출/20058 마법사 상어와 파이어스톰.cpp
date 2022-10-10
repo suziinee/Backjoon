@@ -2,12 +2,13 @@
 #include <cmath>
 using namespace std;
 
+#define MAXN 64
+#define MAXQ 1000
 int N, Q, LEN;
-int map[2][64][64];
-int L[1000];
+int map[2][MAXN][MAXN];
+int L[MAXQ];
 int cur;
 
-bool chk[64][64];
 const int dx[] = { 0, 1, 0, -1 };
 const int dy[] = { -1, 0, 1, 0 };
 
@@ -26,40 +27,34 @@ void input()
 	}
 }
 
-void rotate(int sy, int sx, int n, const int& next)
+void rotate(int y, int x, int len, int tar)
 {
-	int nx = sx;
-	for (int y = sy; y < sy + n; y++) {
-		int ny = sy + n - 1;
-		for (int x = sx; x < sx + n; x++) {
-			map[next][y][x] = map[cur][ny][nx];
-			ny--;
+	if (len == tar) {
+		int next = (cur + 1) % 2;
+		int nx = x;
+		for (int i = y; i < y + tar; i++) {
+			int ny = y + tar - 1;
+			for (int j = x; j < x + tar; j++) {
+				map[next][i][j] = map[cur][ny][nx];
+				ny--;
+			}
+			nx++;
 		}
-		nx++;
-	}
-}
-
-void firestorm(int n)
-{
-	if (n == 0) return;
-	int next = (cur + 1) % 2;
-
-	for (int y = 0; y < LEN; y += n) {
-		for (int x = 0; x < LEN; x += n) {
-			rotate(y, x, n, next);
-		}
+		return;
 	}
 
-	cur = next;
+	int n = len / 2;
+	rotate(y, x, n, tar);
+	rotate(y + n, x, n, tar);
+	rotate(y, x + n, n, tar);
+	rotate(y + n, x + n, n, tar);
 }
 
 void melt()
 {
 	int next = (cur + 1) % 2;
-
 	for (int y = 0; y < LEN; y++) {
 		for (int x = 0; x < LEN; x++) {
-
 			int cnt = 0;
 			for (int d = 0; d < 4; d++) {
 				int nx = x + dx[d];
@@ -68,7 +63,6 @@ void melt()
 				if (map[cur][ny][nx] == 0) continue;
 				cnt++;
 			}
-
 			if (cnt >= 3 || map[cur][y][x] == 0) {
 				map[next][y][x] = map[cur][y][x];
 			}
@@ -80,7 +74,7 @@ void melt()
 	cur = next;
 }
 
-void dfs(int y, int x, int& cnt)
+void dfs(int y, int x, int& cnt, bool(*chk)[MAXN])
 {
 	cnt++;
 	chk[y][x] = true;
@@ -89,30 +83,34 @@ void dfs(int y, int x, int& cnt)
 		int ny = y + dy[d];
 		if (nx < 0 || ny < 0 || nx >= LEN || ny >= LEN) continue;
 		if (map[cur][ny][nx] == 0 || chk[ny][nx]) continue;
-		dfs(ny, nx, cnt);
+		dfs(ny, nx, cnt, chk);
 	}
 }
 
 void solve()
 {
 	for (int i = 0; i < Q; i++) {
-		firestorm(pow(2, L[i]));
+		rotate(0, 0, LEN, pow(2, L[i]));
+		cur = (cur + 1) % 2;
 		melt();
 	}
 
-	int sum = 0; int max_cnt = 0;
+	int sum = 0; int max_ice = 0;
+	bool chk[MAXN][MAXN] = { false, };
 	for (int y = 0; y < LEN; y++) {
 		for (int x = 0; x < LEN; x++) {
-			if (map[cur][y][x]) sum += map[cur][y][x];
-			if (map[cur][y][x] && chk[y][x] == false) {
-				int cnt = 0;
-				dfs(y, x, cnt);
-				max_cnt = max(cnt, max_cnt);
+			if (map[cur][y][x]) {
+				sum += map[cur][y][x];
+				if (chk[y][x] == false) {
+					int cnt = 0;
+					dfs(y, x, cnt, chk);
+					if (cnt > max_ice) max_ice = cnt;
+				}
 			}
+
 		}
 	}
-	
-	cout << sum << "\n" << max_cnt;
+	cout << sum << "\n" << max_ice;
 }
 
 
