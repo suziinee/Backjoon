@@ -5,6 +5,7 @@ using namespace std;
 #define MAX 20
 int R, C, K, W;
 int map[MAX][MAX];
+int heater_lut[MAX][MAX];
 int wall[MAX][MAX][4];
 
 struct AXIS { int y, x; };
@@ -109,14 +110,14 @@ bool wall_check(int y, int x, int dir, int d)
 	}
 }
 
-void dfs(int y, int x, int dir, int temp, bool(*chk)[MAX], int (*back)[MAX])
+void dfs(int y, int x, int dir, int temp, bool(*chk)[MAX])
 {
 	static int dirx[4][3] = { {1, 1, 1}, {-1, -1, -1}, {-1, 0, 1}, {-1, 0, 1} };
 	static int diry[4][3] = { {-1, 0, 1}, {-1, 0, 1}, {-1, -1, -1}, {1, 1, 1} };
 
 	if (temp == 0) return;
 
-	back[y][x] += temp;
+	heater_lut[y][x] += temp;
 	chk[y][x] = true;
 	for (int d = 0; d < 3; d++) {
 		int nx = x + dirx[dir][d];
@@ -124,26 +125,27 @@ void dfs(int y, int x, int dir, int temp, bool(*chk)[MAX], int (*back)[MAX])
 		if (nx < 0 || ny < 0 || nx >= C || ny >= R) continue;
 		if (chk[ny][nx]) continue;
 		if (!wall_check(y, x, dir, d)) continue;
-		dfs(ny, nx, dir, temp - 1, chk, back);
+		dfs(ny, nx, dir, temp - 1, chk);
 	}
 }
 
-void heater_spread() //온풍기에서 바람이 나옴
+void heater_init() //온풍기에서 나오는 바람 table을 미리 만듦
 {
-	int back[MAX][MAX] = { 0, };
-
 	for (HEATER h : heater) {
 		bool chk[MAX][MAX] = { false, };
 		int x = h.x + dx[h.d]; //첫 (y, x)는 5의 위치
 		int y = h.y + dy[h.d];
 		int temp = 5;
 		if (x < 0 || y < 0 || x >= C || y >= R) continue;
-		dfs(y, x, h.d, temp, chk, back);
+		dfs(y, x, h.d, temp, chk);
 	}
+}
 
+void heater_spread() //온풍기에서 나온 바람 더하기
+{
 	for (int y = 0; y < R; y++) {
 		for (int x = 0; x < C; x++) {
-			map[y][x] += back[y][x];
+			map[y][x] += heater_lut[y][x];
 		}
 	}
 }
@@ -196,6 +198,7 @@ bool complete() //조사하려는 모든 칸의 온도가 K 이상 되었는지 
 
 void solve()
 {
+	heater_init();
 	for (int choc = 1; choc <= 100; choc++) {
 		heater_spread();
 		temp_change();
