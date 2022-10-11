@@ -62,8 +62,7 @@ int bfs()
 
 	while (!q.empty()) {
 		STATUS cur = q.front(); q.pop();
-		if (cur.move > 10) return -1;
-		if (map[cur.ry][cur.rx] == 'O' && map[cur.by][cur.bx] != 'O') return cur.move;
+		if (cur.move == 10) return -1;
 
 		for (int d = 0; d < 4; d++) {
 			int nrx = cur.rx;
@@ -86,15 +85,21 @@ int bfs()
 					nrx -= dx[d];
 					nry -= dy[d];
 				}
-				else if (red_dist < blue_dist) {
+				else {
 					nbx -= dx[d];
 					nby -= dy[d];
 				}
 				//같은 거리면 그냥 두기
 			}
 
+			//파란 구슬이 구멍에 빠졌는지 체크
+			if (map[nby][nbx] == 'O') continue;
+			//같은 위치인지 체크 -> 같은 거리에서 오고 구멍이 아닌 같은 위치일 수 있음
+			if (nby == nry && nbx == nrx) continue;
 			//왔던 위치인지 체크
 			if (chk[nry][nrx][nby][nbx]) continue;
+			//종료 조건
+			if (map[nry][nrx] == 'O') return cur.move + 1;
 
 			q.push({ nry, nrx, nby, nbx, cur.move + 1 });
 			chk[nry][nrx][nby][nbx] = true;
