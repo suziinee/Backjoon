@@ -1,139 +1,89 @@
 #include <iostream>
-#include <vector>
-#include <unordered_map>
+#include <algorithm>
 using namespace std;
 
 #define MAXN 20
 int N;
 int map[MAXN + 1][MAXN + 1];
-
-struct D { int d1, d2; };
+int total;
 
 
 void input()
 {
 	cin >> N;
-	for (int y = 1; y <= N; y++) {
-		for (int x = 1; x <= N; x++) {
-			cin >> map[y][x];
+	for (int x = 1; x <= N; x++) {
+		for (int y = 1; y <= N; y++) {
+			cin >> map[x][y];
+			total += map[x][y];
 		}
 	}
 }
 
-int separate(int y, int x, int d1, int d2)
+int separate(int x, int y, int d1, int d2)
 {
-	int min = 0x7fffffff; int max = 0;
-	int fifth = 0;
-	bool chk[MAXN + 1][MAXN + 1] = { false, };
+	int back[MAXN + 1][MAXN + 1] = { 0, }; //5의 경계선 표시
+	int sum[6] = { 0, };
 
-	//5번 선거구 - 경계선
-	int r, c;
-	for (r = y, c = x; r <= y + d1, c >= x - d1; r++, c--) {
-		if (chk[r][c]) continue;
-		fifth += map[r][c];
-		chk[r][c] = true;
+	//(x, y), (x+1, y-1), ..., (x+d1, y-d1)
+	//(x+d2, y+d2), (x+d2+1, y+d2-1), ..., (x+d2+d1, y+d2-d1)
+	for (int i = 0; i <= d1; i++) {
+		back[x + i][y - i] = 5;
+		back[x + d2 + i][y + d2 - i] = 5;
 	}
-	for (r = y, c = x; r <= y + d2, c <= x + d2; r++, c++) {
-		if (chk[r][c]) continue;
-		fifth += map[r][c];
-		chk[r][c] = true;
-	}
-	for (r = y + d1, c = x - d1; r <= y + d1 + d2, c <= x - d1 + d2; r++, c++) {
-		if (chk[r][c]) continue;
-		fifth += map[r][c];
-		chk[r][c] = true;
-	}
-	for (r = y + d2, c = x + d2; r <= y + d1 + d2, c >= x - d1 + d2; r++, c--) {
-		if (chk[r][c]) continue;
-		fifth += map[r][c];
-		chk[r][c] = true;
+	//(x, y), (x+1, y+1), ..., (x+d2, y+d2)
+	//(x+d1, y-d1), (x+d1+1, y-d1+1), ... (x+d1+d2, y-d1+d2)
+	for (int i = 0; i <= d2; i++) {
+		back[x + i][y + i] = 5;
+		back[x + d1 + i][y - d1 + i] = 5;
 	}
 
-	//1번 선거구
-	int sum = 0;
-	for (r = 1; r < y + d1; r++) {
-		for (c = 1; c <= x; c++) {
-			if (chk[r][c]) break;
-			sum += map[r][c];
-			chk[r][c] = true;
+	//1번 선거구: 1 ≤ r < x+d1, 1 ≤ c ≤ y
+	for (int r = 1; r < x + d1; r++) {
+		for (int c = 1; c <= y; c++) {
+			if (back[r][c] == 5) break;
+			sum[1] += map[r][c];
 		}
 	}
-	if (sum > max) max = sum;
-	if (sum < min) min = sum;
-
-	//2번 선거구
-	sum = 0;
-	for (r = 1; r <= y + d2; r++) {
-		for (c = N; c > x; c--) {
-			if (chk[r][c]) break;
-			sum += map[r][c];
-			chk[r][c] = true;
+	//2번 선거구: 1 ≤ r ≤ x+d2, y < c ≤ N
+	for (int r = 1; r <= x + d2; r++) {
+		for (int c = N; c > y; c--) {
+			if (back[r][c] == 5) break;
+			sum[2] += map[r][c];
 		}
 	}
-	if (sum > max) max = sum;
-	if (sum < min) min = sum;
-
-	//3번 선거구
-	sum = 0;
-	for (r = y + d1; r <= N; r++) {
-		for (c = 1; c < x - d1 + d2; c++) {
-			if (chk[r][c]) break;
-			sum += map[r][c];
-			chk[r][c] = true;
+	//3번 선거구: x+d1 ≤ r ≤ N, 1 ≤ c < y-d1+d2
+	for (int r = x + d1; r <= N; r++) {
+		for (int c = 1; c < y - d1 + d2; c++) {
+			if (back[r][c] == 5) break;
+			sum[3] += map[r][c];
 		}
 	}
-	if (sum > max) max = sum;
-	if (sum < min) min = sum;
-
-	//4번 선거구
-	sum = 0;
-	for (r = y + d2 + 1; r <= N; r++) {
-		for (c = N; c >= x - d1 + d2; c--) {
-			if (chk[r][c]) break;
-			sum += map[r][c];
-			chk[r][c] = true;
+	//4번 선거구: x+d2 < r ≤ N, y-d1+d2 ≤ c ≤ N
+	for (int r = x + d2 + 1; r <= N; r++) {
+		for (int c = N; c >= y - d1 + d2; c--) {
+			if (back[r][c] == 5) break;
+			sum[4] += map[r][c];
 		}
 	}
-	if (sum > max) max = sum;
-	if (sum < min) min = sum;
 
-	for (int y = 1; y <= N; y++) {
-		for (int x = 1; x <= N; x++) {
-			if (chk[y][x] == false) fifth += map[y][x];
-		}
-	}
-	if (fifth > max) max = fifth;
-	if (fifth < min) min = fifth;
-
-	return max - min;
-}
-
-bool check(int y, int x, int d1, int d2)
-{
-	if (y + d1 > N || x - d1 < 1) return false;
-	if (y + d2 > N || x + d2 > N) return false;
-	if (y + d1 + d2 > N || x - d1 + d2<1 || x - d1 + d2>N) return false;
-	return true;
+	sum[5] = total - sum[1] - sum[2] - sum[3] - sum[4];
+	int min_sum = min({ sum[1], sum[2], sum[3], sum[4], sum[5] });
+	int max_sum = max({ sum[1], sum[2], sum[3], sum[4], sum[5] });
+	return max_sum - min_sum;
 }
 
 void solve()
 {
-	int end = (N % 2) ? (N / 2) : (N / 2 - 1);
-	vector<D> pair;
-
-	for (int i = 1; i <= end; i++) {
-		for (int j = 1; j <= N - 1 - i; j++) {
-			pair.push_back({ i, j });
-		}
-	}
-
 	int ans = 0x7fffffff;
-	for (D d : pair) {
+	for (int x = 1; x <= N; x++) {
 		for (int y = 1; y <= N; y++) {
-			for (int x = 1; x <= N; x++) {
-				if (check(y, x, d.d1, d.d2)) {
-					int ret = separate(y, x, d.d1, d.d2);
-					if (ret < ans) ans = ret;
+			for (int d1 = 1; d1 <= N; d1++) {
+				for (int d2 = 1; d2 <= N; d2++) {
+					if (x + d1 + d2 > N) continue;
+					if (y - d1 < 1) continue;
+					if (y + d2 > N) continue;
+					int ret = separate(x, y, d1, d2);
+					if (ans > ret) ans = ret;
 				}
 			}
 		}
