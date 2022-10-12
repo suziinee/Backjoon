@@ -7,7 +7,7 @@ int M, S;
 
 struct FISH { int y, x, d; };
 vector<FISH> init_fish;
-vector<FISH> map[4][4];
+vector<int> map[4][4]; //물고기 방향만 저장
 int smell[4][4]; //냄새의 양
 
 struct SHARK { int y, x; };
@@ -31,7 +31,7 @@ void input()
 	for (int i = 0; i < M; i++) {
 		cin >> y >> x >> d;
 		--y; --x; --d;
-		map[y][x].push_back({ y, x, d });
+		map[y][x].push_back(d);
 	}
 	cin >> shark.y >> shark.x;
 	--shark.y; --shark.x;
@@ -42,7 +42,7 @@ void copy_start() //물고기 정보를 init_fish에 복제
 	for (int y = 0; y < 4; y++) {
 		for (int x = 0; x < 4; x++) {
 			if (map[y][x].empty()) continue;
-			for (FISH f : map[y][x]) init_fish.push_back(f);
+			for (int d : map[y][x]) init_fish.push_back({ y, x, d });
 		}
 	}
 }
@@ -52,7 +52,7 @@ void move_fish() //init_fish를 가지고 물고기 이동
 	const int dx[] = { -1, -1, 0, 1, 1, 1, 0, -1 };
 	const int dy[] = { 0, -1, -1, -1, 0, 1, 1, 1 };
 
-	vector<FISH> back[4][4];
+	vector<int> back[4][4];
 	for (FISH f : init_fish) {
 		bool move = false;
 		for (int i = 0; i < 8; i++) {
@@ -62,11 +62,11 @@ void move_fish() //init_fish를 가지고 물고기 이동
 			if (nx < 0 || ny < 0 || nx >= 4 || ny >= 4) continue;
 			if (smell[ny][nx]) continue;
 			if (nx == shark.x && ny == shark.y) continue;
-			back[ny][nx].push_back({ ny, nx, nd });
+			back[ny][nx].push_back(nd);
 			move = true;
 			break;
 		}
-		if (!move) back[f.y][f.x].push_back(f);
+		if (!move) back[f.y][f.x].push_back(f.d);
 	}
 
 	copy(&back[0][0], &back[3][4], &map[0][0]);
@@ -143,7 +143,7 @@ void disappear_smell() //smell 배열에서 냄새 1씩 빼기
 void copy_complete() //init_fish의 물고기들을 map에 추가
 {
 	for (FISH f : init_fish) {
-		map[f.y][f.x].push_back(f);
+		map[f.y][f.x].push_back(f.d);
 	}
 	init_fish.clear();
 }
