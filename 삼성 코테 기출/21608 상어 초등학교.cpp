@@ -1,124 +1,116 @@
 #include <iostream>
-#include <algorithm>
-#include <queue>
+#include <vector>
 #include <unordered_map>
+#include <algorithm>
 using namespace std;
 
-#define MAXN (20)
+#define MAXN 20
 int N;
-int chk[MAXN * MAXN + 1]; //앉힌 사람 확인 배열
-int map[MAXN + 1][MAXN + 1];
+int map[MAXN][MAXN]; //앉은 학생의 번호 기록
 
-struct STU {
-	int n; //자기 번호
-	int fav[4]; //좋아하는 학생의 번호
+struct STUDENT {
+	int n;
+	int pri[4];
 };
-queue<STU> q;
-unordered_map<int, STU> ht;
+vector<STUDENT> student;
+unordered_map<int, STUDENT*> ht;
 
 struct STATUS {
-	int y; int x;
-	int fav_cnt;
-	int blk_cnt;
+	int fav; //인접한 칸 중 좋아하는 학생이 앉은 칸
+	int blk; //인접한 칸 중 비어있는 칸
+	int y, x;
+	bool operator<(const STATUS& s) const {
+		if (fav == s.fav) {
+			if (blk == s.blk) {
+				if (y == s.y) {
+					return x < s.x;
+				}
+				return y < s.y;
+			}
+			return blk > s.blk;
+		}
+		return fav > s.fav;
+	}
 };
-const int dx[] = { 0, 1, 0, -1 };
-const int dy[] = { -1, 0, 1, 0 };
 
 
 void input()
 {
 	cin >> N;
+	int n, p1, p2, p3, p4;
 	for (int i = 0; i < N * N; i++) {
-		STU s;
-		cin >> s.n >> s.fav[0] >> s.fav[1] >> s.fav[2] >> s.fav[3];
-		q.push(s);
-		ht.insert({ s.n, s });
+		cin >> n >> p1 >> p2 >> p3 >> p4;
+		student.push_back({ n, {p1, p2, p3, p4} });
+	}
+	for (int i = 0; i < N * N; i++) {
+		ht.insert({ student[i].n, &student[i] });
 	}
 }
 
-
-bool compare(const STATUS& s1, const STATUS& s2)
+void assign(STUDENT& s)
 {
-	if (s1.fav_cnt == s2.fav_cnt) {
-		if (s1.blk_cnt == s2.blk_cnt) {
-			if (s1.y == s2.y) {
-				return s1.x < s2.x;
-			}
-			return s1.y < s2.y;
-		}
-		return s1.blk_cnt > s2.blk_cnt;
-	}
-	return s1.fav_cnt > s2.fav_cnt;
-}
+	static int dx[] = { 0, 1, 0, -1 };
+	static int dy[] = { -1, 0, 1, 0 };
 
+	vector<STATUS> st;
 
-void bfs()
-{
-	int init_flag = 0;
-
-	while (!q.empty()) {
-		STU cur = q.front(); q.pop();
-
-		if (!init_flag) {
-			map[2][2] = cur.n;
-			chk[cur.n] = 1;
-			init_flag = 1;
-		}
-		else {
-			vector<STATUS> cand; //blk들 확인하기
-			for (int y = 1; y <= N; y++) {
-				for (int x = 1; x <= N; x++) {
-					if (map[y][x]) continue;
-
-					int fav_cnt = 0; int blk_cnt = 0;
-					for (int d = 0; d < 4; d++) { //빈칸에 대해서 fav_cnt, blk_cnt 구해서 cand에 넣기
-						int nx = x + dx[d];
-						int ny = y + dy[d];
-						if (nx < 1 || ny < 1 || nx > N || ny > N) continue;
-						if (map[ny][nx] == 0) blk_cnt++;
-						for (int f = 0; f < 4; f++) {
-							if (map[ny][nx] == cur.fav[f]) fav_cnt++;
-						}
-					}
-					cand.push_back({ y, x, fav_cnt, blk_cnt });
+	for (int y = 0; y < N; y++) {
+		for (int x = 0; x < N; x++) {
+			if (map[y][x]) continue;
+			int fav = 0; int blk = 0;
+			for (int d = 0; d < 4; d++) {
+				int nx = x + dx[d];
+				int ny = y + dy[d];
+				if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
+				if (map[ny][nx] == 0) blk++;
+				for (int n : s.pri) {
+					if (map[ny][nx] == n) { fav++; break; }
 				}
 			}
-			sort(cand.begin(), cand.end(), compare); 
-			map[cand[0].y][cand[0].x] = cur.n;
-			chk[cur.n] = 1;
+			st.push_back({ fav, blk, y, x });
 		}
 	}
+	
+	sort(st.begin(), st.end());
+	map[st[0].y][st[0].x] = s.n;
 }
 
-
-void solve()
+int get_score()
 {
-	bfs();
-	int ans = 0;
+	static int dx[] = { 0, 1, 0, -1 };
+	static int dy[] = { -1, 0, 1, 0 };
 
-	for (int y = 1; y <= N; y++) {
-		for (int x = 1; x <= N; x++) {
-			STU cur = ht[map[y][x]];
+	int sum = 0;
+	for (int y = 0; y < N; y++) {
+		for (int x = 0; x < N; x++) {
 			int cnt = 0;
 			for (int d = 0; d < 4; d++) {
 				int nx = x + dx[d];
 				int ny = y + dy[d];
-				if (nx < 1 || ny < 1 || nx > N || ny > N) continue;
-				for (int f = 0; f < 4; f++) {
-					if (map[ny][nx] == cur.fav[f]) cnt++;
+				if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
+				for (int n : ht[map[y][x]] -> pri) {
+					if (map[ny][nx] == n) { cnt++; break; }
 				}
 			}
 			switch (cnt) {
 			case 0: break;
-			case 1: ans += 1; break;
-			case 2: ans += 10; break;
-			case 3: ans += 100; break;
-			case 4: ans += 1000; break;
+			case 1: sum += 1; break;
+			case 2: sum += 10; break;
+			case 3: sum += 100; break;
+			case 4: sum += 1000; break;
 			}
 		}
 	}
+	return sum;
+}
 
-	cout << ans;
+void solve()
+{
+	map[1][1] = student[0].n;
+	for (int i = 1; i < N * N; i++) {
+		assign(student[i]);
+	}
+	cout << get_score();
 }
 
 
