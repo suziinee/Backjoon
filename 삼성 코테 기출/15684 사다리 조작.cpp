@@ -5,6 +5,7 @@ using namespace std;
 #define MAXH 30
 int N, M, H;
 int map[MAXH + 1][MAXN + 1];
+int ans = 4;
 
 
 void input()
@@ -21,12 +22,10 @@ bool check()
 {
 	for (int i = 1; i <= N; i++) { //사다리가 아닌 세로선
 		int x = i;
-		int y = 1;
 
-		while (y < H + 1) { //양옆에 있는 사다리 확인
+		for (int y = 1; y <= H; y++) {
 			if (map[y][x - 1]) x--; //왼쪽 이동
 			else if (map[y][x]) x++; //오른쪽 이동
-			y++; //아래로 내려가는건 default
 		}
 
 		if (x != i) return false;
@@ -34,33 +33,31 @@ bool check()
 	return true;
 }
 
-bool dfs(int n, int cnt)
+void dfs(int cnt, int y, int x)
 {
-	if (n == cnt) {
-		if (check()) return true;
-		return false;
+	if (cnt >= ans) return;
+	if (check()) {
+		ans = cnt;
+		return;
 	}
-	
-	for (int y = 1; y <= H; y++) {
-		for (int x = 1; x < N; x++) {
-			if (map[y][x] || map[y][x - 1] || map[y][x + 1]) continue;
-			map[y][x] = 1;
-			if (dfs(n + 1, cnt)) return true;
-			map[y][x] = 0;
+	if (cnt == 3) return;
+
+	for (int i = y; i <= H; i++) {
+		for (int j = x; j < N; j++) {
+			if (map[i][j] || map[i][j - 1] || map[i][j + 1]) continue;
+			map[i][j] = 1;
+			dfs(cnt + 1, i, j);
+			map[i][j] = 0;
 		}
+		x = 1;
 	}
-	return false;
 }
 
 void solve()
 {
-	for (int i = 0; i <= 3; i++) {
-		if (dfs(0, i)) {
-			cout << i;
-			return;
-		}
-	}
-	cout << -1;
+	dfs(0, 1, 1);
+	if (ans == 4) cout << -1;
+	else cout << ans;
 }
 
 
