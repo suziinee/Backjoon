@@ -79,17 +79,16 @@ void move_hider()
 
 void move_tagger()
 {
-	if (tagger.dir == 0) { //밖으로 나가는 방향
+	if (tagger.dir == 0) { //밖으로 나가는 방향 (false->true)
 		//(0, 0)일 경우
 		if (tagger.y == 0 && tagger.x == 0) {
-			fill(&visited[0][0], &visited[MAXN - 1][MAXN], false);
 			tagger.y = 1;
 			tagger.x = 0;
 			tagger.d = 2;
 			tagger.see = 2;
 			tagger.dir = 1;
-			visited[0][0] = true;
-			visited[1][0] = true;
+			visited[0][0] = false;
+			visited[1][0] = false;
 			return;
 		}
 
@@ -117,10 +116,9 @@ void move_tagger()
 		if (visited[nny][nnx]) tagger.see = tagger.d;
 		else tagger.see = (tagger.d + 1) % 4;
 	}
-	else { //안으로 들어가는 방향
+	else { //안으로 들어가는 방향 (true->false)
 		//(N/2, N/2)일 경우
 		if (tagger.x == N / 2 && tagger.y == N / 2) {
-			fill(&visited[0][0], &visited[MAXN - 1][MAXN], false);
 			tagger.y = N / 2 - 1;
 			tagger.x = N / 2;
 			tagger.d = 0;
@@ -134,7 +132,7 @@ void move_tagger()
 		int nd = tagger.d;
 		int nx = tagger.x + dx[nd];
 		int ny = tagger.y + dy[nd];
-		if (visited[ny][nx] || nx < 0 || ny < 0 || nx >= N || ny >= N) { //방향 바꾸기
+		if (!visited[ny][nx] || nx < 0 || ny < 0 || nx >= N || ny >= N) { //방향 바꾸기
 			nd = (tagger.d + 3) % 4;
 			nx = tagger.x + dx[nd];
 			ny = tagger.y + dy[nd];
@@ -143,7 +141,7 @@ void move_tagger()
 		tagger.x = nx;
 		tagger.y = ny;
 		tagger.d = nd;
-		visited[ny][nx] = true;
+		visited[ny][nx] = false;
 		//술래가 바라보는 방향 정하기 -> 다음 위치가 visited라면 see=d, 아니라면 see=(d+3)%4
 		if (tagger.x == N / 2 && tagger.y == N / 2) {
 			tagger.see = 0;
@@ -151,7 +149,7 @@ void move_tagger()
 		}
 		int nnx = nx + dx[nd];
 		int nny = ny + dy[nd];
-		if (nnx < 0 || nny < 0 || nnx >= N || nny >= N || visited[nny][nnx]) tagger.see = (tagger.d + 3) % 4;
+		if (nnx < 0 || nny < 0 || nnx >= N || nny >= N || !visited[nny][nnx]) tagger.see = (tagger.d + 3) % 4;
 		else tagger.see = tagger.d;
 	}
 }
