@@ -1,18 +1,18 @@
 #include <iostream>
-#include <vector>
 using namespace std;
 
-#define MAXNM 8
-int N, M;
-int map[MAXNM][MAXNM];
-int ans = 0x7fffffff;
+#define MAX 8
+int N, M, ans;
+int map[MAX][MAX];
 
-struct CCTV { int n; int d; int y; int x; };
-vector<CCTV> cctv;
-int pick_dir[8];
+struct CCTV {
+	int y, x, type;
+};
+CCTV cctv[MAX];
+int cctv_cnt;
 
-const int dx[] = { 1, 0, -1, 0 };
-const int dy[] = { 0, -1, 0, 1 };
+#define WALL (6)
+#define BLANK (0)
 
 
 void input()
@@ -21,168 +21,107 @@ void input()
 	for (int y = 0; y < N; y++) {
 		for (int x = 0; x < M; x++) {
 			cin >> map[y][x];
-			if (map[y][x] != 0 && map[y][x] != 6) {
-				cctv.push_back({ map[y][x], -1, y, x });
+			if (map[y][x] != WALL && map[y][x] != BLANK) {
+				cctv[cctv_cnt].y = y;
+				cctv[cctv_cnt].x = x;
+				cctv[cctv_cnt].type = map[y][x];
+				++cctv_cnt;
 			}
 		}
 	}
 }
 
-
-void check1(int(*area)[MAXNM], CCTV& c, int dir)
+void check(int d, CCTV& c) //(c.y, c.x)에서 d 방향으로 체크
 {
-	int i = 1;
-	while (true) {
-		int nx = c.x + i * dx[dir];
-		int ny = c.y + i * dy[dir];
-		if (nx < 0 || ny < 0 || nx >= M || ny >= N || area[ny][nx] == 6) break;
-		if (area[ny][nx] == 0) area[ny][nx] = -1;
-		i++;
+	switch (d) {
+	case 0: {
+		for (int y = c.y - 1; y >= 0; y--) {
+			if (map[y][c.x] == WALL) return;
+			map[y][c.x] = -1; 
+		}
+		break;
+	}
+	case 1: {
+		for (int x = c.x + 1; x < M; x++) {
+			if (map[c.y][x] == WALL) return;
+			map[c.y][x] = -1;
+		}
+		break;
+	}
+	case 2: {
+		for (int y = c.y + 1; y < N; y++) {
+			if (map[y][c.x] == WALL) return;
+			map[y][c.x] = -1;
+		}
+		break;
+	}
+	case 3: {
+		for (int x = c.x - 1; x >= 0; x--) {
+			if (map[c.y][x] == WALL) return;
+			map[c.y][x] = -1;
+		}
+		break;
+	}
 	}
 }
 
-void check2(int(*area)[MAXNM], CCTV& c, int dir)
+void dfs(int n) //n번 cctv에 대한 방향 설정
 {
-	int comb[2][2] = { {0, 2}, {1, 3} }; //dir 0, dir 1
-	for (int d : comb[dir]) { //2번 함
-		int i = 1;
-		while (true) {
-			int nx = c.x + i * dx[d];
-			int ny = c.y + i * dy[d];
-			if (nx < 0 || ny < 0 || nx >= M || ny >= N || area[ny][nx] == 6) break;
-			if (area[ny][nx] == 0) area[ny][nx] = -1;
-			i++;
+	static int rot[] = { 0, 4, 2, 4, 4, 1 }; //1번~5번까지 몇번 회전 가능한지 
+
+	if (n == cctv_cnt) {
+		int cnt = 0;
+		for (int y = 0; y < N; y++) {
+			for (int x = 0; x < M; x++) {
+				if (map[y][x] == BLANK) ++cnt;
+			}
 		}
-	}
-}
-
-void check3(int(*area)[MAXNM], CCTV& c, int dir)
-{
-	int comb[4][2] = { {0, 1}, {1, 2}, {2, 3}, {3, 0} }; //dir 0, 1, 2, 3
-	for (int d : comb[dir]) { //2번 함
-		int i = 1;
-		while (true) {
-			int nx = c.x + i * dx[d];
-			int ny = c.y + i * dy[d];
-			if (nx < 0 || ny < 0 || nx >= M || ny >= N || area[ny][nx] == 6) break;
-			if (area[ny][nx] == 0) area[ny][nx] = -1;
-			i++;
-		}
-	}
-}
-
-void check4(int(*area)[MAXNM], CCTV& c, int dir)
-{
-	int comb[4][3] = { {0, 1, 2}, {1, 2, 3}, {2, 3, 0}, {3, 0, 1} }; //dir 0, 1, 2, 3
-	for (int d : comb[dir]) { //3번 함
-		int i = 1;
-		while (true) {
-			int nx = c.x + i * dx[d];
-			int ny = c.y + i * dy[d];
-			if (nx < 0 || ny < 0 || nx >= M || ny >= N || area[ny][nx] == 6) break;
-			if (area[ny][nx] == 0) area[ny][nx] = -1;
-			i++;
-		}
-	}
-}
-
-void check5(int(*area)[MAXNM], CCTV& c, int dir)
-{
-	int comb[4] = { 0, 1, 2, 3 };
-	for (int d : comb) { //4번 함
-		int i = 1;
-		while (true) {
-			int nx = c.x + i * dx[d];
-			int ny = c.y + i * dy[d];
-			if (nx < 0 || ny < 0 || nx >= M || ny >= N || area[ny][nx] == 6) break;
-			if (area[ny][nx] == 0) area[ny][nx] = -1;
-			i++;
-		}
-	}
-}
-
-
-int check_area()
-{
-	int area[MAXNM][MAXNM] = { 0 };
-	for (int y = 0; y < N; y++) {
-		for (int x = 0; x < M; x++) {
-			area[y][x] = map[y][x];
-		}
-	}
-
-	for (int i = 0; i < (int)cctv.size(); i++) {
-		switch (cctv[i].n) {
-			case 1: check1(area, cctv[i], pick_dir[i]); break;
-			case 2: check2(area, cctv[i], pick_dir[i]); break;
-			case 3: check3(area, cctv[i], pick_dir[i]); break;
-			case 4: check4(area, cctv[i], pick_dir[i]); break;
-			case 5: check5(area, cctv[i], pick_dir[i]); break;
-		}
-	}
-
-	int ret = 0;
-	for (int y = 0; y < N; y++) {
-		for (int x = 0; x < M; x++) {
-			if (area[y][x] == 0) ret++;
-		}
-	}
-	return ret;
-}
-
-
-void dfs(int depth, int s)
-{
-	if (depth == (int)cctv.size()) {
-		//cctv의 방향을 모두 선택함
-		int ret = check_area();
-		if (ret < ans) ans = ret;
+		if (cnt < ans) ans = cnt;
 		return;
 	}
 
-	for (int i = s; i < (int)cctv.size(); i++) {
-		switch (cctv[i].n) {
+	int type = cctv[n].type;
+	for (int d = 0; d < rot[type]; d++) {
+		int back[MAX][MAX];
+		copy(&map[0][0], &map[MAX - 1][MAX], &back[0][0]);
+		switch (type) {
 		case 1: {
-			for (int d = 0; d < 4; d++) {
-				pick_dir[depth] = d;
-				dfs(depth + 1, i + 1);
-			}
+			check(d, cctv[n]);
 			break;
 		}
 		case 2: {
-			for (int d = 0; d < 2; d++) {
-				pick_dir[depth] = d;
-				dfs(depth + 1, i + 1);
-			}
+			check(d, cctv[n]);
+			check((d + 2) % 4, cctv[n]);
 			break;
 		}
 		case 3: {
-			for (int d = 0; d < 4; d++) {
-				pick_dir[depth] = d;
-				dfs(depth + 1, i + 1);
-			}
+			check(d, cctv[n]);
+			check((d + 3) % 4, cctv[n]);
 			break;
 		}
 		case 4: {
-			for (int d = 0; d < 4; d++) {
-				pick_dir[depth] = d;
-				dfs(depth + 1, i + 1);
-			}
+			check(d, cctv[n]);
+			check((d + 3) % 4, cctv[n]);
+			check((d + 2) % 4, cctv[n]);
 			break;
 		}
 		case 5: {
-			pick_dir[depth] = 0;
-			dfs(depth + 1, i + 1);
+			check(d, cctv[n]);
+			check((d + 3) % 4, cctv[n]);
+			check((d + 2) % 4, cctv[n]);
+			check((d + 1) % 4, cctv[n]);
 			break;
 		}
 		}
+		dfs(n + 1);
+		copy(&back[0][0], &back[MAX - 1][MAX], &map[0][0]);
 	}
 }
 
-
 void solve()
 {
-	dfs(0, 0);
+	ans = 0x7fffffff;
+	dfs(0);
 	cout << ans;
 }
 
