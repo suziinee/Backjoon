@@ -26,6 +26,7 @@ const int ddy[] = { -1, -1, 1, 1 };
 
 #define BLANK (0)
 #define WALL (-1)
+#define KILL (-2)
 
 
 void input()
@@ -48,7 +49,6 @@ void grow_tree()
 				int nx = x + dx[d];
 				int ny = y + dy[d];
 				if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
-				if (map_kill[ny][nx] > 0) continue;
 				if (map[ny][nx] > 0) ++cnt;
 			}
 			map[y][x] += cnt;
@@ -67,7 +67,6 @@ void breed_tree()
 				int nx = x + dx[d];
 				int ny = y + dy[d];
 				if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
-				if (map_kill[ny][nx] > 0) continue;
 				if (map[ny][nx] == BLANK) ++cnt;
 			}
 			if (cnt == 0) continue;
@@ -76,14 +75,13 @@ void breed_tree()
 				int nx = x + dx[d];
 				int ny = y + dy[d];
 				if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
-				if (map_kill[ny][nx] > 0) continue;
 				if (map[ny][nx] == BLANK) back[ny][nx] += breed;
 			}
 		}
 	}
 	for (int y = 0; y < N; y++) {
 		for (int x = 0; x < N; x++) {
-			map[y][x] += back[y][x];
+			if (map[y][x] >= 0) map[y][x] += back[y][x];
 		}
 	}
 }
@@ -117,6 +115,7 @@ void decrease()
 		for (int x = 0; x < N; x++) {
 			if (map_kill[y][x]) {
 				--map_kill[y][x];
+				if (map_kill[y][x] == 0) map[y][x] = BLANK;
 			}
 		}
 	}
@@ -125,7 +124,7 @@ void decrease()
 void spread(TREE& t)
 {
 	killed += t.cnt;
-	map[t.y][t.x] = BLANK;
+	map[t.y][t.x] = KILL;
 	map_kill[t.y][t.x] = C;
 	for (int d = 0; d < 4; d++) {
 		for (int step = 1; step <= K; step++) {
@@ -133,11 +132,12 @@ void spread(TREE& t)
 			int ny = t.y + ddy[d] * step;
 			if (nx < 0 || ny < 0 || nx >= N || ny >= N) break;
 			if (map[ny][nx] == WALL) break;
-			else if (map[ny][nx] == BLANK) {
+			else if (map[ny][nx] == BLANK || map[ny][nx] == KILL) {
+				map[ny][nx] = KILL;
 				map_kill[ny][nx] = C;
 				break;
 			}
-			map[ny][nx] = BLANK;
+			map[ny][nx] = KILL;
 			map_kill[ny][nx] = C;
 		}
 	}
