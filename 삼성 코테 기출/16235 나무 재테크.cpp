@@ -1,141 +1,105 @@
 #include <iostream>
-#include <unordered_map>
-#include <vector>
-#include <algorithm>
+#include <queue>
 using namespace std;
 
 #define MAXN 10
 int N, M, K;
-int material[MAXN + 1][MAXN + 1];
-int map[MAXN + 1][MAXN + 1];
-unordered_map<int, vector<int>> ht;
+int map[MAXN][MAXN];
+int add[MAXN][MAXN]; //겨울에 더할 양분
 
+struct TREE {
+	int y, x, age;
+	bool operator<(const TREE& t) const {
+		return age > t.age;
+	}
+};
+TREE tree[MAXN * MAXN];
+priority_queue<TREE> pq[2];
+queue<TREE> live;
+queue<TREE> die;
+int cur;
 
-inline int get_key(int a, int b) { return a * 100 + b; }
 
 void input()
 {
 	cin >> N >> M >> K;
-
-	for (int y = 1; y <= N; y++) {
-		for (int x = 1; x <= N; x++) {
-			cin >> material[y][x];
+	for (int y = 0; y < N; ++y) {
+		for (int x = 0; x < N; ++x) {
+			cin >> add[y][x];
 			map[y][x] = 5;
 		}
 	}
-
-	int y, x, age;
-	for (int i = 0; i < M; i++) {
-		cin >> y >> x >> age;
-		vector<int> tmp = { age };
-		ht.insert({ get_key(y, x), tmp });
+	for (int i = 0; i < M; ++i) {
+		cin >> tree[i].y >> tree[i].x >> tree[i].age;
+		--tree[i].y; --tree[i].x;
+		pq[cur].push(tree[i]);
 	}
 }
 
 void spring()
 {
-	for (int y = 1; y <= N; y++) {
-		for (int x = 1; x <= N; x++) {
-			int cur_key = get_key(y, x);
-			auto it = ht.find(cur_key);
-			if (it == ht.end()) continue;
-			if ((it->second).size() == 0) continue;
-			
-			sort((it->second).begin(), (it->second).end());
-			int idx = 0;
-			for (int& tree : it->second) {
-				if (map[y][x] < tree) break;
-				map[y][x] -= tree;
-				tree++; idx++;
-			}
-			for (int i = idx; i < (it->second).size(); i++) {
-				(it->second)[i] *= -1; //죽은 나무는 -1이 곱해짐
-			}
+	int next = (cur + 1) % 2;
+	while (!pq[cur].empty()) {
+		TREE data = pq[cur].top(); pq[cur].pop();
+		if (map[data.y][data.x] < data.age) {
+			die.push(data);
+		}
+		else {
+			map[data.y][data.x] -= data.age;
+			++data.age;
+			live.push(data);
+			pq[next].push(data);
 		}
 	}
 }
 
 void summer()
 {
-	for (int y = 1; y <= N; y++) {
-		for (int x = 1; x <= N; x++) {
-			int cur_key = get_key(y, x);
-			auto it = ht.find(cur_key);
-			if (it == ht.end()) continue;
-			if ((it->second).size() == 0) continue;
-
-			vector<int> new_trees;
-			for (int tree : it->second) {
-				if (tree < 0) {
-					map[y][x] += (-1 * tree) / 2;
-				}
-				else new_trees.push_back(tree);
-			}
-
-			it->second = new_trees;
-		}
+	while (!die.empty()) {
+		TREE data = die.front(); die.pop();
+		map[data.y][data.x] += (data.age / 2);
 	}
 }
 
 void fall()
 {
-	static int dx[] = { -1, -1, 0, 1, 1, 1, 0, -1 };
-	static int dy[] = { 0, -1, -1, -1, 0, 1, 1, 1 };
-
-	for (int y = 1; y <= N; y++) {
-		for (int x = 1; x <= N; x++) {
-			int cur_key = get_key(y, x);
-			auto it = ht.find(cur_key);
-			if (it == ht.end()) continue;
-
-			for (int tree : it->second) {
-				if (tree % 5 || tree == 0) continue;
-				for (int d = 0; d < 8; d++) {
-					int nx = x + dx[d];
-					int ny = y + dy[d];
-					if (nx<1 || ny<1 || nx>N || ny>N) continue;
-					
-					int next_key = get_key(ny, nx);
-					auto next_it = ht.find(next_key);
-					if (next_it == ht.end()) {
-						ht.insert({ next_key, {1} });
-					}
-					else {
-						ht.find(next_key)->second.push_back(1);
-					}
-				}
-			}
+	static int dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
+	static int dy[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
+	
+	int next = (cur + 1) % 2;
+	while (!live.empty()) {
+		TREE data = live.front(); live.pop();
+		if (data.age % 5) continue;
+		for (int d = 0; d < 8; ++d) {
+			int nx = data.x + dx[d];
+			int ny = data.y + dy[d];
+			if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
+			pq[next].push({ ny, nx, 1 });
 		}
 	}
 }
 
 void winter()
 {
-	for (int y = 1; y <= N; y++) {
-		for (int x = 1; x <= N; x++) {
-			map[y][x] += material[y][x];
+	for (int y = 0; y < N; ++y) {
+		for (int x = 0; x < N; ++x) {
+			map[y][x] += add[y][x];
 		}
 	}
 }
 
 void solve()
-{	
-	for (int i = 0; i < K; i++) {
+{
+	for (int year = 1; year <= K; ++year) {
 		spring();
 		summer();
-		fall();
+		fall(); 
 		winter();
+		live = {};
+		die = {};
+		cur = (cur + 1) % 2;
 	}
-
-	int ans = 0;
-	for (int y = 1; y <= N; y++) {
-		for (int x = 1; x <= N; x++) {
-			auto it = ht.find(get_key(y, x));
-			if (it == ht.end()) continue;
-			ans += (it->second).size();
-		}
-	}
-	cout << ans;
+	cout << pq[cur].size();
 }
 
 
