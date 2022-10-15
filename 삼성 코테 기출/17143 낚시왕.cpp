@@ -1,20 +1,17 @@
 #include <iostream>
-#include <unordered_map>
+#include <algorithm>
 using namespace std;
 
 #define MAX 100
-int R, C, M;
-int map[MAX][MAX]; //상어 번호 기록
-int ans;
+int R, C, M, ans;
 
 struct SHARK {
-	int r, c;
-	int s, d;
+	int s, d, z; //속력, 방향, 크기
 };
-unordered_map<int, SHARK> shark;
+SHARK map[MAX][MAX]; //죽은 상어는 크기가 0
 
-const int dr[] = { -1, 1, 0, 0 }; //up down right left
-const int dc[] = { 0, 0, 1, -1 };
+const int dx[] = { -0, 0, 1, -1 };
+const int dy[] = { -1, 1, 0, 0 };
 
 
 void input()
@@ -24,18 +21,18 @@ void input()
 	for (int i = 0; i < M; i++) {
 		cin >> r >> c >> s >> d >> z;
 		--r; --c; --d;
-		map[r][c] = z;
-		shark.insert({ z, {r, c, s, d} });
+		map[r][c] = { s, d, z };
 	}
 }
 
-void catch_shark(int c)
+void catch_shark(int x)
 {
-	for (int r = 0; r < R; r++) {
-		if (map[r][c]) { //해당 상어를 잡아먹음
-			ans += map[r][c];
-			shark.erase(map[r][c]);
-			map[r][c] = 0;
+	for (int y = 0; y < R; y++) {
+		if (map[y][x].z) {
+			ans += map[y][x].z;
+			map[y][x].z = 0;
+			map[y][x].s = 0;
+			map[y][x].d = 0;
 			return;
 		}
 	}
@@ -43,119 +40,92 @@ void catch_shark(int c)
 
 void move_shark()
 {
-	int back[MAX][MAX] = { 0 };
-
-	for (int size = 10000; size >= 1; size--) {
-		if (shark.find(size) == shark.end()) continue; //없거나 죽은 상어
-		SHARK& cur = shark[size];
-		switch (cur.d) {
-		case 0: {
-			if (cur.r - cur.s >= 0) {
-				cur.r -= cur.s;
+	SHARK back[MAX][MAX] = { 0, };
+	for (int y = 0; y < R; y++) {
+		for (int x = 0; x < C; x++) {
+			if (map[y][x].z == 0) continue;
+			switch (map[y][x].d) {
+			case 0: { //y 감소
+				int ny = y - map[y][x].s;
+				if (ny < 0) {
+					int diff = map[y][x].s - y;
+					int rep = diff / (R - 1);
+					int rem = diff % (R - 1);
+					if (rep % 2) { //방향 같음
+						ny = (R - 1) - rem;
+					}
+					else { //방향 반대
+						ny = rem;
+						map[y][x].d = 1;
+					}
+				}
+				if (back[ny][x].z && back[ny][x].z > map[y][x].z) continue;
+				back[ny][x].s = map[y][x].s;
+				back[ny][x].d = map[y][x].d;
+				back[ny][x].z = map[y][x].z;
+				break;
 			}
-			else {
-				int tmp = cur.s - cur.r;
-				int a = tmp / (R - 1); //몫
-				int b = tmp % (R - 1); //나머지
-				if (a % 2 && b) {
-					cur.r = (R - 1) - b;
+			case 1: { //y 증가
+				int ny = y + map[y][x].s;
+				if (ny >= R) {
+					int diff = ny - (R - 1);
+					int rep = diff / (R - 1);
+					int rem = diff % (R - 1);
+					if (rep % 2) { //방향 같음
+						ny = rem;
+					}
+					else { //방향 반대
+						ny = (R - 1) - rem;
+						map[y][x].d = 0;
+					}
 				}
-				else if (a % 2 && b == 0) {
-					cur.d = 1;
-					cur.r = R - 1;
-				}
-				else if (a % 2 == 0 && b) {
-					cur.d = 1;
-					cur.r = 0 + b;
-				}
-				else if (a % 2 == 0 && b == 0) {
-					cur.r = 0;
-				}
+				if (back[ny][x].z && back[ny][x].z > map[y][x].z) continue;
+				back[ny][x].s = map[y][x].s;
+				back[ny][x].d = map[y][x].d;
+				back[ny][x].z = map[y][x].z;
+				break;
 			}
-			break;
-		}
-		case 1: {
-			if (cur.r + cur.s < R) {
-				cur.r += cur.s;
+			case 2: { //x 증가
+				int nx = x + map[y][x].s;
+				if (nx >= C) {
+					int diff = nx - (C - 1);
+					int rep = diff / (C - 1);
+					int rem = diff % (C - 1);
+					if (rep % 2) { //방향 같음
+						nx = rem;
+					}
+					else { //방향 다름
+						nx = (C - 1) - rem;
+						map[y][x].d = 3;
+					}
+				}
+				if (back[y][nx].z && back[y][nx].z > map[y][x].z) continue;
+				back[y][nx].s = map[y][x].s;
+				back[y][nx].d = map[y][x].d;
+				back[y][nx].z = map[y][x].z;
+				break;
 			}
-			else {
-				int tmp = cur.s - (R - 1 - cur.r);
-				int a = tmp / (R - 1); //몫
-				int b = tmp % (R - 1); //나머지
-				if (a % 2 && b) {
-					cur.r = 0 + b;
+			case 3: { //x 감소
+				int nx = x - map[y][x].s;
+				if (nx < 0) {
+					int diff = map[y][x].s - x;
+					int rep = diff / (C - 1);
+					int rem = diff % (C - 1);
+					if (rep % 2) { //방향 같음
+						nx = (C - 1) - rem;
+					}
+					else { //방향 다름
+						nx = rem;
+						map[y][x].d = 2;
+					}
 				}
-				else if (a % 2 && b == 0) {
-					cur.d = 0;
-					cur.r = 0;
-				}
-				else if (a % 2 == 0 && b) {
-					cur.d = 0;
-					cur.r = (R - 1) - b;
-				}
-				else if (a % 2 == 0 && b == 0) {
-					cur.r = R - 1;
-				}
+				if (back[y][nx].z && back[y][nx].z > map[y][x].z) continue;
+				back[y][nx].s = map[y][x].s;
+				back[y][nx].d = map[y][x].d;
+				back[y][nx].z = map[y][x].z;
+				break;
 			}
-			break;
-		}
-		case 2: {
-			if (cur.c + cur.s < C) {
-				cur.c += cur.s;
 			}
-			else {
-				int tmp = cur.s - (C - 1 - cur.c);
-				int a = tmp / (C - 1); //몫
-				int b = tmp % (C - 1); //나머지
-				if (a % 2 && b) {
-					cur.c = 0 + b;
-				}
-				else if (a % 2 && b == 0) {
-					cur.d = 3;
-					cur.c = 0;
-				}
-				else if (a % 2 == 0 && b) {
-					cur.d = 3;
-					cur.c = (C - 1) - b;
-				}
-				else if (a % 2 == 0 && b == 0) {
-					cur.c = C - 1;
-				}
-			}
-			break;
-		}
-		case 3: {
-			if (cur.c - cur.s >= 0) {
-				cur.c -= cur.s;
-			}
-			else {
-				int tmp = cur.s - cur.c;
-				int a = tmp / (C - 1); //몫
-				int b = tmp % (C - 1); //나머지
-				if (a % 2 && b) {
-					cur.c = (C - 1) - b;
-				}
-				else if (a % 2 && b == 0) {
-					cur.d = 2;
-					cur.c = C - 1;
-				}
-				else if (a % 2 == 0 && b) {
-					cur.d = 2;
-					cur.c = 0 + b;
-				}
-				else if (a % 2 == 0 && b == 0) {
-					cur.c = 0;
-				}
-			}
-			break;
-		}
-		}
-		//그 자리에 상어가 있는지 확인 -> 큰 사이즈부터 확인했기 때문에 상어가 있으면 못들어감 -> 죽음
-		if (back[cur.r][cur.c]) {
-			shark.erase(size);
-		}
-		else {
-			back[cur.r][cur.c] = size;
 		}
 	}
 	copy(&back[0][0], &back[MAX - 1][MAX], &map[0][0]);
@@ -163,8 +133,8 @@ void move_shark()
 
 void solve()
 {
-	for (int c = 0; c < C; c++) {
-		catch_shark(c);
+	for (int x = 0; x < C; x++) {
+		catch_shark(x);
 		move_shark();
 	}
 	cout << ans;
